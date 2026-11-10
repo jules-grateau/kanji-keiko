@@ -3,7 +3,10 @@
 let session = null;
 const REDO_GAP = 4;   // un kanji raté revient après au plus 4 autres cartes
 
-const showScreen = id => ["login", "home", "session", "end"].forEach(x => $(x).classList.toggle("hide", x !== id));
+function showScreen(id) {
+  ["login", "home", "session", "end"].forEach(x => $(x).classList.toggle("hide", x !== id));
+  document.body.classList.toggle("focus", id === "session");   // en session, on masque le titre pour gagner de la place
+}
 const setHidden = (id, hidden) => $(id).classList.toggle("hide", hidden);
 
 function startSession() {
@@ -27,10 +30,11 @@ function nextCard() {
   if (!session.queue.length) return finishSession();
   const k = kanjiInfo(session.current = session.queue.shift());
   session.judged = false;
-  stopStrokeAnimation();
-  clearPad();
-  $("typed").value = "";
-  $("typed").disabled = false;
+  clearStrokes();
+  resetPad();
+  $("workspace").classList.remove("revealed");
+  $("verdict").textContent = "";
+  window.scrollTo(0, 0);   // si on était descendu lire l'explication
 
   $("lvl").textContent = "N" + k.level;
   $("strokes").textContent = k.strokes + " traits";
@@ -51,32 +55,27 @@ function nextCard() {
   $("pbar").style.width = (session.done / (session.done + left) * 100) + "%";
 }
 
-// Montre la réponse. Si un kanji a été tapé, on juge automatiquement ; sinon l'utilisateur s'auto-évalue.
+// Montre la réponse par-dessus le tracé ; l'utilisateur s'auto-évalue ensuite.
 function reveal() {
   if (!session || session.judged || !$("result").classList.contains("hide")) return;
-  const char = session.current, typed = $("typed").value.trim();
+  const char = session.current;
 
   setHidden("result", false);
   setHidden("checkrow", true);
+  $("workspace").classList.add("revealed");
   setHidden("readings", false);
-  $("ans").textContent = char;
   renderStrokes(char);
-  drawAnswerOverlay(char);
+  showAnswerOverlay(char);
   renderExplanation(char);
 
-  if (typed) {
-    judge(typed === char);
-  } else {
-    setHidden("grade", false);
-    $("verdict").textContent = "Compare avec ton tracé en rouge, puis juge-toi honnêtement.";
-    $("verdict").className = "verdict";
-  }
+  setHidden("grade", false);
+  $("verdict").textContent = "Compare avec ton tracé, puis juge-toi honnêtement.";
+  $("verdict").className = "verdict";
 }
 
 function judge(ok) {
   const char = session.current;
   session.judged = true;
-  $("typed").disabled = true;
   setHidden("grade", true);
 
   const days = recordAnswer(char, ok);
@@ -145,18 +144,24 @@ function initSession() {
   $("gy").onclick = () => judge(true);
   $("gn").onclick = () => judge(false);
   $("next").onclick = next;
-  $("replay").onclick = playStrokeAnimation;
+  $("animBox").onclick = () => { if ($("anim").innerHTML) playStrokeAnimation(); };
 
-  // Entrée dans le champ texte = Vérifier (sauf pendant la saisie IME).
-  $("typed").addEventListener("keydown", e => {
-    if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); reveal(); }
+  // Ctrl+Z (ou Cmd+Z) : retirer le dernier trait, sauf quand on écrit sa note.
+  document.addEventListener("keydown", e => {
+    const inSession = session && !$("session").classList.contains("hide");
+    if (inSession && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && document.activeElement.tagName !== "TEXTAREA") {
+      e.preventDefault();
+      undoStroke();
+    }
   });
 
-  // Entrée ailleurs dans la page = Suivant, une fois la réponse jugée.
+  // Touche Entrée : Vérifier tant que la réponse est cachée, Suivant une fois qu'elle est jugée.
   document.addEventListener("keydown", e => {
-    const inSession = session && session.judged && !$("session").classList.contains("hide");
+    const inSession = session && !$("session").classList.contains("hide");
     const typing = ["BUTTON", "TEXTAREA", "INPUT"].includes(document.activeElement.tagName);
-    if (e.key === "Enter" && inSession && !typing) { e.preventDefault(); next(); }
+    if (e.key !== "Enter" || !inSession || typing) return;
+    e.preventDefault();
+    if (session.judged) next(); else reveal();
   });
 
   // Note perso : sauvegardée à chaque frappe et marquée pour la synchro.

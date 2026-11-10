@@ -204,13 +204,23 @@ textarea { width: 100%; resize: vertical; }
 .pill.on { color: var(--indigo); border-color: var(--indigo); }
 .pill.kun { color: var(--ochre); border-color: var(--ochre); }
 
+/* Zone de travail : après Vérifier, tracé à gauche (2/3) et deux carrés empilés à droite (1/3) ;
+   avec ce ratio, les deux carrés font ensemble la hauteur du tracé.
+   Pendant le dessin, le tracé est seul et centré, à la même taille (pas de saut à l'affichage). */
+.workspace {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 8px;
+  margin: 12px 0 10px;
+}
+.workspace:not(.revealed) { grid-template-columns: 1fr; justify-items: center; }
+.workspace:not(.revealed) .pad { width: calc((100% - 8px) * 2 / 3); }
+.workspace:not(.revealed) .answer-col { display: none; }
+
 /* Zone de dessin carrée avec une croix de repère au centre */
 .pad {
   position: relative;
-  width: 100%;
-  max-width: 340px;
   aspect-ratio: 1;
-  margin: 12px auto 8px;
   border: 2px solid var(--ink);
   border-radius: 4px;
   background:
@@ -232,22 +242,55 @@ textarea { width: 100%; resize: vertical; }
   opacity: .5;
 }
 
-.tools { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
-.tools input { width: 200px; font-size: 20px; text-align: center; }
+/* Petits boutons dans le coin du tracé : retirer un trait, tout effacer */
+.pad-tools { position: absolute; top: 6px; right: 6px; display: flex; gap: 6px; z-index: 1; }
+.pad-tools button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  opacity: .9;
+}
+.pad-tools button:hover { color: var(--ink); border-color: var(--ink); }
+
+.answer-col { display: flex; flex-direction: column; gap: 8px; }
+.square {
+  position: relative;
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.square-art { position: absolute; inset: 6px; }
+.square-art svg { display: block; }
+.square.replay { cursor: pointer; }
+.cap {
+  position: absolute;
+  left: 6px;
+  bottom: 4px;
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* En session, le titre de l'appli est masqué pour que tout tienne à l'écran */
+body.focus header { display: none; }
 
 /* ============================================================
-   Résultat : réponse, verdict, auto-évaluation
+   Actions : Effacer/Vérifier → Juste/Raté → Suivant, toujours au même endroit
    ============================================================ */
-.ans { font-size: 96px; line-height: 1; text-align: center; margin: 6px 0 2px; }
+.actions { display: flex; gap: 10px; justify-content: center; }
+.actions button { flex: 1; max-width: 220px; min-height: 46px; }
 
-.verdict { text-align: center; font-weight: 700; margin-bottom: 12px; }
-.verdict.ok { color: var(--ok); }
-.verdict.ko { color: var(--red); }
-
-.grade { display: flex; gap: 10px; justify-content: center; margin: 8px 0 6px; }
 .grade button {
-  flex: 1;
-  max-width: 200px;
   border-radius: 10px;
   padding: 11px;
   border: 1px solid var(--line);
@@ -257,8 +300,12 @@ textarea { width: 100%; resize: vertical; }
 .grade .y { border-color: var(--ok); color: var(--ok); }
 .grade .n { border-color: var(--red); color: var(--red); }
 
+.verdict { text-align: center; font-weight: 700; font-size: 14px; margin: 8px 0 4px; min-height: 1.5em; }
+.verdict.ok { color: var(--ok); }
+.verdict.ko { color: var(--red); }
+
 /* ============================================================
-   Ordre des traits
+   Trait par trait
    ============================================================ */
 .lab {
   font-size: 12px;
@@ -266,11 +313,8 @@ textarea { width: 100%; resize: vertical; }
   text-transform: uppercase;
   color: var(--muted);
   text-align: center;
-  margin-top: 10px;
+  margin-top: 6px;
 }
-.animwrap { display: flex; gap: 14px; align-items: center; justify-content: center; margin: 10px 0 4px; }
-#anim svg { display: block; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
-
 .steps { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0 6px; }
 .step { text-align: center; font-size: 11px; color: var(--muted); }
 .step svg { display: block; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); }

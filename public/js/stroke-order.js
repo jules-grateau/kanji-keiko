@@ -1,4 +1,4 @@
-// Ordre des traits : animation du kanji complet + vignettes trait par trait.
+// Ordre des traits : animation, kanji fini et vignettes trait par trait.
 
 // Enveloppe SVG commune (les tracés KanjiVG sont en 109×109).
 const svgBox = (inner, size) =>
@@ -17,13 +17,21 @@ function strokeStart(d) {
 let animationId = 0;
 const stopStrokeAnimation = () => { animationId++; };
 
+function clearStrokes() {
+  stopStrokeAnimation();
+  $("anim").innerHTML = $("final").innerHTML = $("steps").innerHTML = "";
+}
+
 function renderStrokes(char) {
   const paths = STROKES[char] || [];
 
   // Grande animation : les traits en gris clair dessous, ceux qui seront animés par-dessus.
   const ghost = paths.map(d => `<path d="${d}" stroke="var(--line)" stroke-width="4.5"/>`).join("");
   const animated = paths.map(d => `<path class="sp" d="${d}" stroke="var(--ink)" stroke-width="4.5"/>`).join("");
-  $("anim").innerHTML = svgBox(GRID + ghost + animated, 160);
+  $("anim").innerHTML = svgBox(GRID + ghost + animated, "100%");
+
+  // Kanji fini : tous les traits, sans animation.
+  $("final").innerHTML = svgBox(paths.map(d => `<path d="${d}" stroke="var(--ink)" stroke-width="4.5"/>`).join(""), "100%");
 
   // Vignettes : traits précédents estompés, trait courant en rouge avec son point de départ.
   $("steps").innerHTML = paths.map((d, i) => {
