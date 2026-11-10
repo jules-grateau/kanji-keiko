@@ -7,7 +7,6 @@ function showScreen(id) {
   ["login", "home", "session", "end"].forEach(x => $(x).classList.toggle("hide", x !== id));
   document.body.classList.toggle("focus", id === "session");   // en session, on masque le titre pour gagner de la place
 }
-const setHidden = (id, hidden) => $(id).classList.toggle("hide", hidden);
 
 function startSession() {
   const q = buildQueue();
@@ -17,6 +16,7 @@ function startSession() {
     judged: false,     // réponse déjà jugée ?
     redo: null,        // kanji raté à réinsérer dans la file
     done: 0, ok: 0, ko: 0,
+    known: 0,                // marqués « Je le maîtrise » pendant la session
     seen: new Set(),
     missed: [],
     streakExtended: false,   // première carte de la journée faite pendant cette session ?
@@ -100,6 +100,34 @@ function judge(ok) {
   setHidden("nextrow", false);
 }
 
+// « Je le maîtrise » : le kanji sort des révisions et on passe directement à la suite.
+function markCurrentKnown() {
+  const char = session.current;
+  const before = markKnown(char);
+  if (session.redo === char) session.redo = null;
+  session.missed = session.missed.filter(k => k !== char);
+  session.known++;
+  session.seen.add(char);
+  session.done++;
+  persist();
+  nextCard();
+
+  showToast(char + " ne te sera plus proposé.", () => {
+    unmarkKnown(char, before);
+    persist();
+    session.known--;
+    session.done--;
+    // Encore en session : on le réaffiche tout de suite, la carte en cours passe juste après.
+    if (!$("session").classList.contains("hide")) {
+      session.queue.unshift(char, session.current);
+      nextCard();
+    } else {
+      if (!$("end").classList.contains("hide")) finishSession();   // met à jour le bilan affiché
+      renderHome();
+    }
+  });
+}
+
 function next() {
   if (session.redo) {
     session.queue.splice(Math.min(REDO_GAP, session.queue.length), 0, session.redo);
@@ -130,6 +158,9 @@ function finishSession() {
   $("eStreak").textContent = count
     ? "🔥 " + (session.streakExtended ? "Série prolongée : " : "Série : ") + plural(count)
     : "";
+  $("eKnown").textContent = session.known
+    ? session.known + (session.known > 1 ? " kanji marqués comme maîtrisés." : " kanji marqué comme maîtrisé.")
+    : "";
   setHidden("missWrap", !session.missed.length);
   $("miss").innerHTML = session.missed.map(k => `<span class="jp">${esc(k)}</span>`).join("");
   showScreen("end");
@@ -144,6 +175,7 @@ function initSession() {
   $("gy").onclick = () => judge(true);
   $("gn").onclick = () => judge(false);
   $("next").onclick = next;
+  $("known").onclick = markCurrentKnown;
   $("animBox").onclick = () => { if ($("anim").innerHTML) playStrokeAnimation(); };
 
   // Ctrl+Z (ou Cmd+Z) : retirer le dernier trait, sauf quand on écrit sa note.

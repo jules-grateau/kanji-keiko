@@ -3,12 +3,18 @@
 // Chaque kanji vu a une entrée : [boîte (0..7), prochaineRévision (ms), nbJustes, nbRatés].
 // Une bonne réponse fait monter d'une boîte, une erreur renvoie en boîte 0.
 // La boîte fixe le délai avant la prochaine révision (INTERVAL_DAYS).
+// Un kanji marqué « Je le maîtrise » passe en boîte KNOWN_BOX et ne revient plus.
+//
+// nbJustes + nbRatés sert aussi de numéro de version pour la synchro (l'entrée qui en a
+// le plus gagne) : toute modification doit donc l'augmenter, sinon un autre appareil l'écraserait.
 
 const INTERVAL_DAYS = [0, 1, 2, 4, 8, 16, 32, 64];
 const DAY_MS = 864e5;
 const MASTERED_BOX = 4;   // à partir de cette boîte, le kanji compte comme « maîtrisé »
 const MAX_DUE = 40;       // nombre max de révisions par session
 const LEVELS = [5, 4, 3, 2, 1];
+const KNOWN_BOX = 99;                // « Je le maîtrise » : sorti des révisions
+const KNOWN_DUE = Date.UTC(2100, 0, 1);  // date de révision qui n'arrive jamais
 
 // Clés localStorage (ne pas renommer : elles contiennent la progression existante).
 const KEY_PROGRESS = "kanji-srs-v1";
@@ -62,6 +68,25 @@ function buildQueue() {
     .slice(0, MAX_DUE);
   const fresh = pool.filter(k => !progress[k]).slice(0, settings.n);
   return { due, fresh };
+}
+
+// Marque un kanji comme maîtrisé. Renvoie l'entrée d'avant, pour pouvoir annuler.
+function markKnown(k) {
+  const before = progress[k] ? [...progress[k]] : null;
+  const e = before ? [...before] : [0, 0, 0, 0];
+  e[0] = KNOWN_BOX;
+  e[1] = KNOWN_DUE;
+  e[2]++;   // compte comme une bonne réponse (et fait gagner cette version à la synchro)
+  progress[k] = e;
+  return before;
+}
+
+// Annule markKnown : le kanji retrouve sa boîte (ou redevient à revoir tout de suite s'il était nouveau).
+function unmarkKnown(k, before) {
+  const known = progress[k];
+  progress[k] = before
+    ? [before[0], before[1], known[2] + 1, known[3]]
+    : [0, Date.now(), known[2] + 1, known[3]];
 }
 
 // Enregistre une réponse et renvoie le délai (en jours) avant la prochaine révision.

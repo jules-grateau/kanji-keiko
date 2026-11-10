@@ -2,6 +2,8 @@
 
 const $ = id => document.getElementById(id);
 
+const setHidden = (id, hidden) => $(id).classList.toggle("hide", hidden);
+
 // Échappe le HTML avant de l'injecter via innerHTML.
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -24,3 +26,14 @@ function save(key, value) {
 // Lectures : on → katakana ; kun "ひと.つ" → "ひと（つ）", "-うえ" → "〜うえ".
 const toKatakana = s => s.replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 96));
 const formatKun = s => s.replace(/^-/, "〜").replace(/-$/, "〜").replace(/\.(.*)$/, "（$1）");
+
+// Bandeau en bas d'écran avec un bouton Annuler, qui disparaît après quelques secondes.
+let toastTimer = null;
+function showToast(text, onUndo) {
+  $("toastText").textContent = text;
+  $("toastUndo").onclick = () => { hideToast(); onUndo(); };
+  setHidden("toast", false);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 6000);
+}
+const hideToast = () => setHidden("toast", true);
