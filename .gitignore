@@ -1,0 +1,11 @@
+# Secrets et configuration locale (voir .env.example)
+.env
+.env.*
+!.env.example
+
+# Données des utilisateurs et clé de signature des sessions
+/data/
+
+# Dépendances et paramètres d'éditeur
+node_modules/
+.claude/settings.local.json

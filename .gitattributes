@@ -1,0 +1,2 @@
+# Fins de ligne LF partout (le serveur tourne sous Linux dans Docker)
+* text=auto eol=lf

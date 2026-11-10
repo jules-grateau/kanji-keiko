@@ -1,0 +1,9 @@
+{
+  "name": "kanji-keiko",
+  "private": true,
+  "description": "Entraînement à l'écriture des kanji, avec synchro par compte Google",
+  "engines": { "node": ">=22.9" },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js"
+  }
+}

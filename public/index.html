@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>漢字稽古 · entraînement à l’écriture</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main>
+<header>
+  <h1 class="jp">漢字<span>稽古</span></h1>
+  <p class="sub">Écris le kanji à partir du sens et des lectures. Ce que tu rates revient plus vite, avec ses composants et une astuce pour le retenir.</p>
+</header>
+
+<!-- Écrans : un seul visible à la fois (voir showScreen dans js/session.js).
+     Tous cachés au chargement, le temps de savoir si l’utilisateur est connecté. -->
+<section id="login" class="hide">
+  <div class="panel login">
+    <h3>Connexion</h3>
+    <p class="note">Connecte-toi pour retrouver ta progression sur tous tes appareils.</p>
+    <div id="gsi"></div>
+    <p class="notice hide" id="loginnote" role="status"></p>
+  </div>
+</section>
+
+<section id="home" class="hide">
+  <div class="panel">
+    <h3>Niveaux à travailler</h3>
+    <div id="levels"></div>
+    <div class="row" style="margin-top:12px">
+      <label class="chk">Nouveaux kanji par session
+        <select id="newn"><option>5</option><option>10</option><option>15</option><option>20</option><option>30</option></select></label>
+      <label class="chk"><input type="checkbox" id="hard"> Mode difficile (sens seul)</label>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Aujourd’hui</h3>
+    <div class="stats"><div><b id="sDue">0</b><span>à réviser</span></div><div><b id="sNew">0</b><span>nouveaux</span></div><div><b id="sMast">0</b><span>maîtrisés</span></div></div>
+    <div class="row" style="margin-top:14px"><button class="primary" id="start">Commencer</button><button class="link" id="reset">Réinitialiser la progression</button></div>
+    <div class="row" style="margin-top:12px"><button class="ghost" id="export">Exporter ma progression</button><label class="ghost" style="cursor:pointer">Importer<input type="file" id="import" accept="application/json" hidden></label></div>
+    <h3 style="margin-top:16px">Compte</h3>
+    <div class="row"><span class="note" id="who"></span><button class="link" id="logout">Se déconnecter</button></div>
+    <p class="note" id="syncnote"></p>
+  </div>
+</section>
+
+<section id="session" class="hide">
+  <div class="top"><span id="count"></span><button class="link" id="quit">Terminer</button></div>
+  <div class="prog"><i id="pbar"></i></div>
+  <div class="panel" id="card">
+    <div class="meta"><span class="badge" id="lvl"></span><span id="strokes"></span></div>
+    <div class="mean" id="mean"></div>
+    <div class="readings" id="readings"></div>
+    <div class="pad dash" id="pad"><canvas id="cv" width="680" height="680"></canvas></div>
+    <div class="tools">
+      <button class="ghost" id="clear">Effacer</button>
+      <input type="text" id="typed" lang="ja" placeholder="…ou tape le kanji" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="nextrow" id="checkrow"><button class="primary" id="check">Vérifier</button></div>
+    <div id="result" class="hide">
+      <div class="ans jp" id="ans"></div>
+      <div class="verdict" id="verdict"></div>
+      <div class="grade hide" id="grade"><button class="y" id="gy">J’avais juste</button><button class="n" id="gn">Raté</button></div>
+      <div class="lab">Ordre des traits</div>
+      <div class="animwrap"><div id="anim"></div><button class="ghost" id="replay">Rejouer</button></div>
+      <div class="steps" id="steps"></div>
+      <details id="explain"><summary>Décortiquer ce kanji</summary>
+        <div class="comps" id="comps"></div>
+        <div class="note" id="wk"></div>
+        <div class="mn" id="mn"></div>
+        <label class="note" for="note" style="display:block;margin-top:10px">Ma note perso (ton image, ton histoire)</label>
+        <textarea id="note" rows="2" placeholder="Écris ici ce qui marche pour toi…"></textarea>
+      </details>
+      <div class="nextrow hide" id="nextrow"><button class="primary" id="next">Suivant →</button></div>
+    </div>
+  </div>
+</section>
+
+<section id="end" class="hide">
+  <div class="panel">
+    <h3>Session terminée</h3>
+    <div class="stats"><div><b id="eOk">0</b><span>justes</span></div><div><b id="eKo">0</b><span>ratés</span></div><div><b id="eAll">0</b><span>vus</span></div></div>
+    <div id="missWrap" class="hide"><p class="note" style="margin-top:14px">À retravailler :</p><div class="miss" id="miss"></div></div>
+    <div class="nextrow"><button class="primary" id="again">Retour</button></div>
+  </div>
+</section>
+</main>
+
+<!-- Scripts classiques (pas de modules) qui partagent leurs variables globales.
+     L’ordre compte : données, outils, logique, écrans, puis main.js qui démarre tout. -->
+<script src="data/kanji.js"></script>
+<script src="data/strokes.js"></script>
+<script src="js/util.js"></script>
+<script src="js/kanji.js"></script>
+<script src="js/srs.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/home.js"></script>
+<script src="js/pad.js"></script>
+<script src="js/stroke-order.js"></script>
+<script src="js/session.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

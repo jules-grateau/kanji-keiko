@@ -1,0 +1,14 @@
+services:
+  kanji:
+    build: .
+    image: kanji-keiko:latest
+    restart: unless-stopped
+    environment:
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?définis GOOGLE_CLIENT_ID dans le fichier .env}
+      SESSION_SECRET: ${SESSION_SECRET:-}   # vide = clé générée et gardée dans le volume
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - kanji-data:/data
+volumes:
+  kanji-data:

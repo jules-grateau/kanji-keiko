@@ -1,0 +1,355 @@
+/* ============================================================
+   Thème (clair par défaut, sombre selon le système ou data-theme)
+   ============================================================ */
+:root {
+  --paper: #f3eee2;
+  --card: #fbf8f0;
+  --ink: #1d1a16;
+  --muted: #7a7266;
+  --line: #d9d1bf;
+  --red: #c23a22;
+  --indigo: #2f4a6b;
+  --ochre: #9a6a1a;
+  --ok: #3f6b3a;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #16140f;
+    --card: #1f1c16;
+    --ink: #eee7d8;
+    --muted: #9b927f;
+    --line: #3a3528;
+    --red: #e8654d;
+    --indigo: #8fb0d6;
+    --ochre: #d9a74a;
+    --ok: #8fc088;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #16140f;
+  --card: #1f1c16;
+  --ink: #eee7d8;
+  --muted: #9b927f;
+  --line: #3a3528;
+  --red: #e8654d;
+  --indigo: #8fb0d6;
+  --ochre: #d9a74a;
+  --ok: #8fc088;
+  color-scheme: dark;
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 16px/1.55 "Zen Kaku Gothic New", system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+main { max-width: 560px; margin: 0 auto; padding: 22px 16px 56px; }
+
+.jp { font-family: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; }
+
+h1 {
+  font-family: "Shippori Mincho", "Hiragino Mincho ProN", serif;
+  font-weight: 700;
+  font-size: 40px;
+  letter-spacing: .06em;
+  margin: 4px 0 2px;
+}
+h1 span { color: var(--red); }
+
+.sub { color: var(--muted); margin: 0 0 22px; font-size: 14px; }
+.hide { display: none !important; }
+.note { font-size: 14px; color: var(--muted); margin: 6px 0; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+.nextrow { text-align: center; margin-top: 14px; }
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.panel h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ============================================================
+   Formulaires et boutons
+   ============================================================ */
+button { font: inherit; color: inherit; cursor: pointer; }
+
+label.chk { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+
+select,
+input[type=text],
+textarea {
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+textarea { width: 100%; resize: vertical; }
+
+.primary {
+  background: var(--ink);
+  color: var(--paper);
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+.primary:disabled { opacity: .35; cursor: default; }
+
+.ghost {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 14px;
+}
+
+.link {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  text-decoration: underline;
+  font-size: 13px;
+  padding: 0;
+}
+
+/* ============================================================
+   Accueil : niveaux JLPT et statistiques
+   ============================================================ */
+.lv {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.lv[aria-pressed="true"] {
+  border-color: var(--red);
+  background: color-mix(in srgb, var(--red) 7%, transparent);
+}
+.lv b { font-family: "Shippori Mincho", serif; font-size: 20px; }
+.lv small { display: block; color: var(--muted); font-size: 12.5px; }
+
+.bar { height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 5px; }
+.bar i { display: block; height: 100%; background: var(--ink); opacity: .8; }
+.bar i.m { background: var(--ok); opacity: 1; }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+.stats b { display: block; font-family: "Shippori Mincho", serif; font-size: 28px; }
+.stats span { font-size: 12px; color: var(--muted); }
+
+/* ============================================================
+   Session : carte, lectures, zone de dessin
+   ============================================================ */
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.prog { height: 4px; background: var(--line); border-radius: 2px; margin-bottom: 16px; overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--red); width: 0; transition: width .3s; }
+
+.meta { display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.badge { border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; font-weight: 700; color: var(--ink); }
+.mean { font-size: 25px; line-height: 1.25; margin: 8px 0 10px; font-weight: 700; }
+
+.readings { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+.pill {
+  display: inline-flex;
+  gap: 7px;
+  align-items: baseline;
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 19px;
+  border: 1px solid;
+}
+.pill em { font-style: normal; font-size: 11px; font-weight: 700; }
+.pill.on { color: var(--indigo); border-color: var(--indigo); }
+.pill.kun { color: var(--ochre); border-color: var(--ochre); }
+
+/* Zone de dessin carrée avec une croix de repère au centre */
+.pad {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 1;
+  margin: 12px auto 8px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background:
+    linear-gradient(var(--line), var(--line)) center / 1px 100% no-repeat,
+    linear-gradient(var(--line), var(--line)) center / 100% 1px no-repeat,
+    var(--card);
+}
+.pad canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+
+/* Diagonales en pointillé, par-dessus la croix */
+.pad.dash::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(45deg, transparent calc(50% - .5px), var(--line) 50%, transparent calc(50% + .5px)),
+    linear-gradient(-45deg, transparent calc(50% - .5px), var(--line) 50%, transparent calc(50% + .5px));
+  opacity: .5;
+}
+
+.tools { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.tools input { width: 200px; font-size: 20px; text-align: center; }
+
+/* ============================================================
+   Résultat : réponse, verdict, auto-évaluation
+   ============================================================ */
+.ans { font-size: 96px; line-height: 1; text-align: center; margin: 6px 0 2px; }
+
+.verdict { text-align: center; font-weight: 700; margin-bottom: 12px; }
+.verdict.ok { color: var(--ok); }
+.verdict.ko { color: var(--red); }
+
+.grade { display: flex; gap: 10px; justify-content: center; margin: 8px 0 6px; }
+.grade button {
+  flex: 1;
+  max-width: 200px;
+  border-radius: 10px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-weight: 700;
+}
+.grade .y { border-color: var(--ok); color: var(--ok); }
+.grade .n { border-color: var(--red); color: var(--red); }
+
+/* ============================================================
+   Ordre des traits
+   ============================================================ */
+.lab {
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 10px;
+}
+.animwrap { display: flex; gap: 14px; align-items: center; justify-content: center; margin: 10px 0 4px; }
+#anim svg { display: block; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+
+.steps { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0 6px; }
+.step { text-align: center; font-size: 11px; color: var(--muted); }
+.step svg { display: block; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); }
+
+/* ============================================================
+   Décomposition du kanji et mnémotechnique
+   ============================================================ */
+details { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
+summary { cursor: pointer; color: var(--muted); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
+
+.comps { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.comp {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 6px 10px;
+  text-align: center;
+  min-width: 64px;
+  background: var(--paper);
+}
+.comp b { display: block; font-family: "Shippori Mincho", serif; font-size: 30px; line-height: 1.1; font-weight: 500; }
+.comp span { font-size: 12px; color: var(--muted); }
+
+.mn {
+  white-space: pre-wrap;
+  background: var(--paper);
+  border-left: 3px solid var(--red);
+  padding: 10px 12px;
+  border-radius: 0 8px 8px 0;
+  font-size: 15px;
+  margin-top: 10px;
+}
+
+/* ============================================================
+   Fin de session
+   ============================================================ */
+.miss { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.miss span {
+  font-family: "Shippori Mincho", serif;
+  font-size: 34px;
+  border: 1px solid var(--red);
+  border-radius: 10px;
+  padding: 0 10px;
+}
+
+/* ============================================================
+   Connexion
+   ============================================================ */
+.login { text-align: center; padding-block: 28px; }
+.login #gsi { display: flex; justify-content: center; margin: 18px 0 6px; min-height: 44px; }
+
+/* Encadré d'indication sous le bouton de connexion (.info bleu, .error rouge) */
+.notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.45;
+  margin: 16px auto 0;
+  max-width: 380px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--ink);
+}
+.notice::before {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--card);
+  font-weight: 700;
+  font-size: 13px;
+}
+.notice.info { --accent: var(--indigo); }
+.notice.info::before { content: "i"; font-family: Georgia, serif; font-style: italic; }
+.notice.error { --accent: var(--red); }
+.notice.error::before { content: "!"; }
