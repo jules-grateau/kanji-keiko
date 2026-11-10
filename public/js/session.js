@@ -16,6 +16,7 @@ function startSession() {
     done: 0, ok: 0, ko: 0,
     seen: new Set(),
     missed: [],
+    streakExtended: false,   // première carte de la journée faite pendant cette session ?
   };
   showScreen("session");
   nextCard();
@@ -79,6 +80,7 @@ function judge(ok) {
   setHidden("grade", true);
 
   const days = recordAnswer(char, ok);
+  if (markActiveToday()) session.streakExtended = true;
   if (ok) {
     session.ok++;
   } else {
@@ -125,6 +127,10 @@ function finishSession() {
   $("eOk").textContent = session.ok;
   $("eKo").textContent = session.ko;
   $("eAll").textContent = session.seen.size;
+  const { count } = streakInfo();
+  $("eStreak").textContent = count
+    ? "🔥 " + (session.streakExtended ? "Série prolongée : " : "Série : ") + plural(count)
+    : "";
   setHidden("missWrap", !session.missed.length);
   $("miss").innerHTML = session.missed.map(k => `<span class="jp">${esc(k)}</span>`).join("");
   showScreen("end");

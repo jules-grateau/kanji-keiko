@@ -1,6 +1,7 @@
 // Écran d'accueil : choix des niveaux, réglages et compteurs du jour.
 
 function renderHome() {
+  renderStreak();
   const stats = levelStats();
 
   $("levels").innerHTML = LEVELS.map(n => {
@@ -39,6 +40,6 @@ function initHome() {
     progress = {};
     saveProgress();
     renderHome();
-    if (canSync()) push({ reset: true, srs: {}, notes });
+    if (canSync()) push({ reset: true, srs: {}, notes, days: activeDays });
   };
 }

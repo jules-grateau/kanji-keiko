@@ -30,6 +30,8 @@ const postJson = (url, body) => fetch(url, {
 // Fusionne l'état renvoyé par le serveur dans l'état local.
 function mergeFromServer(remote) {
   mergeProgress(remote.srs);
+  mergeDays(remote.days);
+  saveDays();
   for (const k in remote.notes || {}) {
     if (!(k in dirtyNotes)) notes[k] = remote.notes[k];
   }
@@ -43,7 +45,7 @@ async function push(body) {
     const res = await fetch("api/state", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body || { srs: progress, notes }),
+      body: JSON.stringify(body || { srs: progress, notes, days: activeDays }),
     });
     if (res.status === 401) { showSignedOut("Ta session a expiré. Reconnecte-toi pour continuer, rien n’est perdu."); return; }
     if (!res.ok) throw new Error(res.status);
@@ -70,9 +72,11 @@ function persist() {
 function clearLocalData() {
   progress = {};
   notes = {};
+  activeDays = [];
   dirtyNotes = {};
   saveProgress();
   saveNotes();
+  saveDays();
   renderHome();
 }
 

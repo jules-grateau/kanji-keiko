@@ -353,3 +353,16 @@ summary { cursor: pointer; color: var(--muted); font-size: 13px; letter-spacing:
 .notice.info::before { content: "i"; font-family: Georgia, serif; font-style: italic; }
 .notice.error { --accent: var(--red); }
 .notice.error::before { content: "!"; }
+
+/* ============================================================
+   Série de jours (accueil et fin de session)
+   ============================================================ */
+.streak { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.streak .flame { font-size: 38px; line-height: 1; transition: filter .3s, opacity .3s; }
+.streak.off .flame { filter: grayscale(1); opacity: .45; }   /* rien fait aujourd'hui */
+.streak-main { flex: 1; min-width: 180px; }
+.streak-main b { font-family: "Shippori Mincho", serif; font-size: 30px; line-height: 1; margin-right: 2px; }
+.streak-main small { display: block; color: var(--muted); font-size: 13px; margin-top: 3px; }
+.streak-best { color: var(--muted); font-size: 12.5px; }
+.end-streak { text-align: center; font-weight: 700; margin: 14px 0 0; }
+.end-streak:empty { display: none; }

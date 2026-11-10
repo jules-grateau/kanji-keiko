@@ -1,6 +1,11 @@
 // Stockage de la progression : un fichier JSON par utilisateur dans data/users/.
 //
-// state = { srs: { kanji: [boîte, prochaineRévision, nbJustes, nbRatés] }, notes: { kanji: texte }, t: dernièreMàJ }
+// state = {
+//   srs:   { kanji: [boîte, prochaineRévision, nbJustes, nbRatés] },
+//   notes: { kanji: texte },
+//   days:  ["AAAA-MM-JJ", …]   jours d’entraînement, pour la série (voir public/js/streak.js)
+//   t:     dernière mise à jour
+// }
 const fs = require("fs");
 const path = require("path");
 const { USERS_DIR } = require("./config");
@@ -8,6 +13,8 @@ const { USERS_DIR } = require("./config");
 const MAX_KEY_LENGTH = 4;      // un kanji fait 1 ou 2 unités UTF-16 ; on refuse les clés plus longues
 const MAX_NOTE_LENGTH = 2000;
 const MAX_ENTRIES = 3000;      // un peu plus que le nombre de kanji : évite qu'un compte remplisse le disque
+const MAX_DAYS = 5000;         // ~13 ans d'entraînement quotidien
+const DAY_FORMAT = /^\d{4}-\d{2}-\d{2}$/;
 
 fs.mkdirSync(USERS_DIR, { recursive: true });
 
@@ -21,7 +28,7 @@ function fileOf(userId) {
 
 function getState(userId) {
   if (cache.has(userId)) return cache.get(userId);
-  let state = { srs: {}, notes: {}, t: 0 };
+  let state = { srs: {}, notes: {}, days: [], t: 0 };
   try {
     state = Object.assign(state, JSON.parse(fs.readFileSync(fileOf(userId), "utf8")));
   } catch (e) {
@@ -67,6 +74,12 @@ function merge(userId, incoming) {
     if (!note.trim()) { delete state.notes[k]; continue; }
     if (!state.notes[k] && Object.keys(state.notes).length >= MAX_ENTRIES) continue;
     state.notes[k] = note.slice(0, MAX_NOTE_LENGTH);
+  }
+
+  // Jours d'entraînement : union des deux listes (on ne perd jamais un jour), les plus récents gardés.
+  if (Array.isArray(incoming.days)) {
+    const valid = incoming.days.filter(d => typeof d === "string" && DAY_FORMAT.test(d));
+    state.days = [...new Set([...state.days, ...valid])].sort().slice(-MAX_DAYS);
   }
 
   state.t = Date.now();
