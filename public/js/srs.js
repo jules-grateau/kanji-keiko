@@ -81,12 +81,14 @@ function markKnown(k) {
   return before;
 }
 
-// Annule markKnown : le kanji retrouve sa boîte (ou redevient à revoir tout de suite s'il était nouveau).
-function unmarkKnown(k, before) {
-  const known = progress[k];
+// Remet l'entrée d'un kanji dans l'état `before` (annulation d'une réponse ou d'un « Je le maîtrise »).
+// Sans `before` (kanji nouveau), il devient à revoir tout de suite.
+// La version augmente quand même, sinon la synchro ramènerait l'état annulé.
+function restoreEntry(k, before) {
+  const current = progress[k];
   progress[k] = before
-    ? [before[0], before[1], known[2] + 1, known[3]]
-    : [0, Date.now(), known[2] + 1, known[3]];
+    ? [before[0], before[1], current[2] + 1, current[3]]
+    : [0, Date.now(), current[2] + 1, current[3]];
 }
 
 // Enregistre une réponse et renvoie le délai (en jours) avant la prochaine révision.

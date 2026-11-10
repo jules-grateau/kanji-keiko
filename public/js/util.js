@@ -29,11 +29,11 @@ const formatKun = s => s.replace(/^-/, "〜").replace(/-$/, "〜").replace(/\.(.
 
 // Bandeau en bas d'écran avec un bouton Annuler, qui disparaît après quelques secondes.
 let toastTimer = null;
-function showToast(text, onUndo) {
+function showToast(text, onUndo, duration = 6000) {
   $("toastText").textContent = text;
   $("toastUndo").onclick = () => { hideToast(); onUndo(); };
   setHidden("toast", false);
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(hideToast, 6000);
+  toastTimer = setTimeout(hideToast, duration);
 }
 const hideToast = () => setHidden("toast", true);

@@ -68,7 +68,7 @@
 </section>
 
 <section id="session" class="hide">
-  <div class="top"><span id="count"></span><button class="link" id="quit">Terminer</button></div>
+  <div class="top"><button class="link" id="back" title="Annuler la dernière réponse et refaire ce kanji">← Précédent</button><span id="count"></span><button class="link" id="quit">Terminer</button></div>
   <div class="prog"><i id="pbar"></i></div>
   <div class="panel" id="card">
     <div class="meta"><span class="badge" id="lvl"></span><span id="strokes"></span><button class="link known-btn" id="known" title="Ne plus me le proposer">✓ Je le maîtrise</button></div>
@@ -93,7 +93,7 @@
 
     <!-- Une seule ligne d’actions, dont le contenu change : Vérifier → Juste/Raté → Suivant -->
     <div class="actions" id="checkrow"><button class="primary" id="check">Vérifier</button></div>
-    <div class="actions grade hide" id="grade"><button class="y" id="gy">J’avais juste</button><button class="n" id="gn">Raté</button></div>
+    <div class="actions grade hide" id="grade"><button class="n" id="gn">Raté</button><button class="y" id="gy">J’avais juste</button></div>
     <div class="actions hide" id="nextrow"><button class="primary" id="next">Suivant →</button></div>
     <div class="verdict" id="verdict"></div>
 

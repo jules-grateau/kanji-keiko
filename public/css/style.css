@@ -122,6 +122,7 @@ textarea { width: 100%; resize: vertical; }
   letter-spacing: .03em;
 }
 .primary:disabled { opacity: .35; cursor: default; }
+.link:disabled { opacity: .35; cursor: default; text-decoration: none; }
 
 .ghost {
   background: none;

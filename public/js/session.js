@@ -20,6 +20,7 @@ function startSession() {
     seen: new Set(),
     missed: [],
     streakExtended: false,   // première carte de la journée faite pendant cette session ?
+    history: [],             // réponses données, pour « ← Précédent » (voir goBack)
   };
   showScreen("session");
   nextCard();
@@ -50,6 +51,8 @@ function nextCard() {
   setHidden("nextrow", true);
   $("explain").open = false;
 
+  $("back").disabled = !session.history.length;
+
   const left = session.queue.length + 1;
   $("count").textContent = left + " à faire";
   $("pbar").style.width = (session.done / (session.done + left) * 100) + "%";
@@ -73,8 +76,43 @@ function reveal() {
   $("verdict").className = "verdict";
 }
 
+// ---------- Historique : « ← Précédent » ----------
+
+// Avant chaque réponse, on note l'entrée du kanji et l'état de la session pour pouvoir tout annuler.
+function remember(char) {
+  session.history.push({
+    char,
+    entryBefore: progress[char] ? [...progress[char]] : null,
+    state: {
+      queue: [...session.queue], redo: session.redo,
+      done: session.done, ok: session.ok, ko: session.ko, known: session.known,
+      seen: new Set(session.seen), missed: [...session.missed],
+    },
+  });
+}
+
+// Annule la dernière réponse et réaffiche ce kanji, vierge, pour le refaire.
+// Un même kanji peut avoir deux réponses d'affilée (Raté puis « Je le maîtrise ») : on annule les deux.
+function goBack() {
+  if (!session || !session.history.length) return;
+  const char = session.history[session.history.length - 1].char;
+  let entry;
+  while (session.history.length && session.history[session.history.length - 1].char === char) entry = session.history.pop();
+
+  restoreEntry(char, entry.entryBefore);
+  persist();
+  Object.assign(session, entry.state);
+  session.queue.unshift(char);
+  hideToast();
+  showScreen("session");
+  nextCard();
+}
+
+// ---------- Réponses ----------
+
 function judge(ok) {
   const char = session.current;
+  remember(char);
   session.judged = true;
   setHidden("grade", true);
 
@@ -98,34 +136,33 @@ function judge(ok) {
     : "Raté ✗ — il reviendra dans cette session";
   $("explain").open = !ok;   // en cas d'erreur, on déplie directement l'explication
   setHidden("nextrow", false);
+  $("back").disabled = false;
+  return days;
+}
+
+// « J'avais juste » : on enchaîne directement, le verdict s'affiche dans le bandeau du bas.
+function judgeCorrect() {
+  const char = session.current;
+  const days = judge(true);
+  next();
+  const when = days > 1 ? "dans " + days + " jours" : days === 1 ? "demain" : "bientôt";
+  showToast("Juste ✓ — " + char + " revient " + when + ".", goBack, 3500);
 }
 
 // « Je le maîtrise » : le kanji sort des révisions et on passe directement à la suite.
 function markCurrentKnown() {
   const char = session.current;
-  const before = markKnown(char);
+  remember(char);
+  markKnown(char);
   if (session.redo === char) session.redo = null;
   session.missed = session.missed.filter(k => k !== char);
   session.known++;
   session.seen.add(char);
-  session.done++;
+  if (!session.judged) session.done++;   // déjà compté si on l'avait jugé avant
   persist();
   nextCard();
 
-  showToast(char + " ne te sera plus proposé.", () => {
-    unmarkKnown(char, before);
-    persist();
-    session.known--;
-    session.done--;
-    // Encore en session : on le réaffiche tout de suite, la carte en cours passe juste après.
-    if (!$("session").classList.contains("hide")) {
-      session.queue.unshift(char, session.current);
-      nextCard();
-    } else {
-      if (!$("end").classList.contains("hide")) finishSession();   // met à jour le bilan affiché
-      renderHome();
-    }
-  });
+  showToast(char + " ne te sera plus proposé.", goBack);
 }
 
 function next() {
@@ -172,7 +209,8 @@ function initSession() {
   $("again").onclick = () => { showScreen("home"); renderHome(); };
 
   $("check").onclick = reveal;
-  $("gy").onclick = () => judge(true);
+  $("gy").onclick = judgeCorrect;
+  $("back").onclick = goBack;
   $("gn").onclick = () => judge(false);
   $("next").onclick = next;
   $("known").onclick = markCurrentKnown;

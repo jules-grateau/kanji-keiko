@@ -38,14 +38,13 @@ function renderKnownDetail() {
 function putBackInReview() {
   const char = selectedKnown;
   const before = [...progress[char]];
-  unmarkKnown(char, null);   // revient à la prochaine session
+  restoreEntry(char, null);   // revient à la prochaine session
   selectedKnown = null;
   persist();
   renderHome();
 
   showToast(char + " revient dans tes révisions.", () => {
-    // Annuler : on le remet comme avant (la version augmente pour gagner à la synchro).
-    progress[char] = [before[0], before[1], progress[char][2] + 1, before[3]];
+    restoreEntry(char, before);   // Annuler : on le remet comme avant
     persist();
     renderHome();
   });
