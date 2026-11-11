@@ -12,7 +12,7 @@ const EXTRA_STEP = 5;         // « + 5 nouveaux en plus » une fois l'objectif 
 let introDays = load(KEY_INTRO, {});   // "AAAA-MM-JJ" → [kanji, …]
 
 const saveIntro = () => save(KEY_INTRO, introDays);
-const introducedToday = () => introDays[dayKey()] || [];
+const introducedToday = () => introDays[todayKey()] || [];
 const goalRemaining = () => Math.max(0, settings.goal - introducedToday().length);
 
 function pruneIntro() {
@@ -20,7 +20,7 @@ function pruneIntro() {
 }
 
 function markIntroduced(k) {
-  const today = dayKey(), list = introDays[today] || (introDays[today] = []);
+  const today = todayKey(), list = introDays[today] || (introDays[today] = []);
   if (list.includes(k)) return;
   list.push(k);
   pruneIntro();

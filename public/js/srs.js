@@ -1,16 +1,28 @@
-// Progression et répétition espacée (SRS).
+// Progression et répétition espacée (SRS). Les règles sont expliquées à l'utilisateur sur la page
+// « Comment marche la révision » (js/srs-page.js), qui lit directement les constantes ci-dessous.
 //
-// Chaque kanji vu a une entrée : [boîte (0..7), prochaineRévision (ms), nbJustes, nbRatés].
-// Une bonne réponse fait monter d'une boîte, une erreur renvoie en boîte 0.
-// La boîte fixe le délai avant la prochaine révision (INTERVAL_DAYS).
-// Un kanji marqué « Je le maîtrise » passe en boîte KNOWN_BOX et ne revient plus.
+// Chaque kanji vu a une entrée : [boîte (0..10), prochaineRévision (ms), nbJustes, nbRatés].
+// - Juste : +1 boîte ; la boîte fixe le délai avant la prochaine révision (INTERVAL_DAYS, ± aléa).
+// - Raté : −LAPSE_DROP boîtes, puis il faut le réussir RELEARN_SUCCESSES fois dans la séance
+//   (gestion dans session.js) avant qu'il reparte avec le délai de sa boîte (au moins 1 jour).
+// - Les révisions se comptent en jours d'étude (un jour commence à DAY_START_HOUR heures) :
+//   un kanji prévu pour un jour est à réviser dès le début de ce jour, à n'importe quelle heure.
+// - Un kanji marqué « Je le maîtrise » passe en boîte KNOWN_BOX et ne revient plus.
 //
 // nbJustes + nbRatés sert aussi de numéro de version pour la synchro (l'entrée qui en a
 // le plus gagne) : toute modification doit donc l'augmenter, sinon un autre appareil l'écraserait.
 
-const INTERVAL_DAYS = [0, 1, 2, 4, 8, 16, 32, 64];
-const DAY_MS = 864e5;
-const MASTERED_BOX = 4;   // à partir de cette boîte, le kanji compte comme « maîtrisé »
+const INTERVAL_DAYS = [0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 365];   // délai par boîte (jours)
+const MAX_BOX = INTERVAL_DAYS.length - 1;   // dernière boîte : une révision par an
+const LEARNED_BOX = 4;      // à partir de cette boîte (8 jours), le kanji est « appris »
+const MASTERED_BOX = 6;     // à partir de cette boîte (32 jours), il est « maîtrisé »
+const LAPSE_DROP = 2;       // un raté fait descendre de 2 boîtes
+const RELEARN_SUCCESSES = 2;   // après un raté : 2 réussites dans la séance avant de repartir
+const REDO_GAP = 4;         // un kanji raté revient après au plus 4 autres cartes
+const RELEARN_GAP = 10;     // … puis, après la 1re réussite, encore une fois ~10 cartes plus loin
+const FUZZ_FROM_DAYS = 8;   // à partir de 8 jours, le délai varie au hasard…
+const FUZZ = 0.1;           // … de ±10 %, pour étaler les révisions (pas de pics)
+const DAY_START_HOUR = 4;   // un jour d'étude commence à 4 h du matin
 const LEVELS = [5, 4, 3, 2, 1];
 const GOAL_MIN = 1, GOAL_MAX = 100;         // objectif : nouveaux kanji par jour
 const GOAL_PRESETS = [5, 10, 15, 20, 30];   // raccourcis de l'écran Réglages
@@ -67,17 +79,32 @@ function mergeProgress(incoming) {
   }
 }
 
-// Compteurs par niveau JLPT : total, vus, maîtrisés, à réviser.
+// ---------- Jours d'étude ----------
+
+// Début (DAY_START_HOUR heures) du jour d'étude d'aujourd'hui, décalé de `offset` jours.
+// Avant 4 h du matin, on est encore « la veille ».
+function studyDayStart(offset = 0) {
+  const d = new Date(Date.now() - DAY_START_HOUR * 36e5);
+  d.setHours(DAY_START_HOUR, 0, 0, 0);
+  d.setDate(d.getDate() + offset);   // setDate gère les changements de mois et d'heure
+  return d.getTime();
+}
+
+// À réviser : prévu pour aujourd'hui (ou avant), quelle que soit l'heure.
+const isDue = e => e[1] < studyDayStart(1);
+
+// Compteurs par niveau JLPT : total, vus, appris, maîtrisés, à réviser.
 function levelStats() {
-  const now = Date.now(), out = {};
-  for (const n of LEVELS) out[n] = { total: 0, seen: 0, mastered: 0, due: 0 };
+  const out = {};
+  for (const n of LEVELS) out[n] = { total: 0, seen: 0, learned: 0, mastered: 0, due: 0 };
   KANJI.forEach(r => {
     const o = out[r[1]], e = progress[r[0]];
     o.total++;
     if (!e) return;
     o.seen++;
+    if (e[0] >= LEARNED_BOX) o.learned++;     // « Je le maîtrise » (boîte 99) compte aussi
     if (e[0] >= MASTERED_BOX) o.mastered++;
-    if (e[1] <= now) o.due++;
+    if (isDue(e)) o.due++;
   });
   return out;
 }
@@ -101,9 +128,8 @@ const newKanji = () => levelPool().filter(k => !progress[k]);
 // même hors des niveaux choisis), les plus anciennes d'abord et sans plafond pour respecter le SRS,
 // + les nouveaux des niveaux actifs (N5 d'abord) qui restent pour l'objectif du jour (ou `extraNew` au-delà).
 function buildQueue(extraNew = 0) {
-  const now = Date.now();
   const due = Object.keys(progress)
-    .filter(k => KANJI_BY_CHAR[k] && progress[k][1] <= now)
+    .filter(k => KANJI_BY_CHAR[k] && isDue(progress[k]))
     .sort((a, b) => progress[a][1] - progress[b][1]);
   const fresh = newKanji().slice(0, extraNew || goalRemaining());
   return { due, fresh };
@@ -136,13 +162,51 @@ function restoreEntry(k, before) {
     : [0, Date.now(), current[2] + 1, current[3]];
 }
 
-// Enregistre une réponse et renvoie le délai (en jours) avant la prochaine révision.
-function recordAnswer(k, ok) {
-  const e = progress[k] || [0, 0, 0, 0];
-  if (ok) { e[0] = Math.min(e[0] + 1, INTERVAL_DAYS.length - 1); e[2]++; }
-  else { e[0] = 0; e[3]++; }
-  const days = INTERVAL_DAYS[e[0]];
-  e[1] = Date.now() + days * DAY_MS;
-  progress[k] = e;
+// ---------- Réponses ----------
+
+// Délai d'une boîte, avec l'aléa de ±10 % à partir de 8 jours (8 j → 7 à 9 j, 32 j → 29 à 35 j).
+function fuzzDays(days) {
+  if (days < FUZZ_FROM_DAYS) return days;
+  const spread = Math.round(days * FUZZ);
+  return days + Math.round((Math.random() * 2 - 1) * spread);
+}
+
+// Programme la prochaine révision d'après la boîte : au début du jour d'étude concerné.
+function schedule(e) {
+  const days = fuzzDays(INTERVAL_DAYS[e[0]]);
+  e[1] = studyDayStart(days);
   return days;
+}
+
+// Juste : +1 boîte. Renvoie le délai en jours.
+function answerRight(k) {
+  const e = progress[k] || [0, 0, 0, 0];
+  e[0] = Math.min(e[0] + 1, MAX_BOX);
+  e[2]++;
+  progress[k] = e;
+  return schedule(e);
+}
+
+// Raté : −2 boîtes, à revoir tout de suite (réapprentissage dans la séance, voir session.js).
+function answerWrong(k) {
+  const e = progress[k] || [0, 0, 0, 0];
+  e[0] = Math.max(0, e[0] - LAPSE_DROP);
+  e[1] = Date.now();
+  e[3]++;
+  progress[k] = e;
+}
+
+// Réapprentissage : réussite qui n'est pas encore la dernière → toujours à revoir tout de suite.
+function relearnStep(k) {
+  const e = progress[k];
+  e[1] = Date.now();
+  e[2]++;
+}
+
+// Réapprentissage terminé : il repart avec le délai de sa boîte (au moins la boîte 1 : demain).
+function relearnDone(k) {
+  const e = progress[k];
+  e[0] = Math.max(1, e[0]);
+  e[2]++;
+  return schedule(e);
 }

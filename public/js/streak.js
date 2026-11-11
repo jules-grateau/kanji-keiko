@@ -11,10 +11,14 @@ let activeDays = load(KEY_DAYS, []);   // jours travaillés, triés
 const saveDays = () => save(KEY_DAYS, activeDays);
 
 // Date locale → "AAAA-MM-JJ".
-function dayKey(date = new Date()) {
+function dayKey(date) {
   const pad = n => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
+
+// Jour d'étude d'aujourd'hui : il commence à 4 h du matin (DAY_START_HOUR, srs.js),
+// donc une séance à 1 h du matin compte encore pour la veille.
+const todayKey = () => dayKey(new Date(studyDayStart()));
 
 // Jour précédent (setDate gère les changements de mois et d'heure).
 function previousDay(key) {
@@ -28,7 +32,7 @@ function mergeDays(incoming) {
 
 // Appelé à chaque carte jugée. Renvoie true si c'est la première de la journée.
 function markActiveToday() {
-  const today = dayKey();
+  const today = todayKey();
   if (activeDays.includes(today)) return false;
   activeDays.push(today);
   saveDays();
@@ -37,7 +41,7 @@ function markActiveToday() {
 
 // Série en cours. Tant qu'on n'a rien fait aujourd'hui, la série d'hier est encore « en jeu ».
 function streakInfo() {
-  const days = new Set(activeDays), today = dayKey();
+  const days = new Set(activeDays), today = todayKey();
   const doneToday = days.has(today);
   let cursor = doneToday ? today : previousDay(today), count = 0;
   while (days.has(cursor)) { count++; cursor = previousDay(cursor); }

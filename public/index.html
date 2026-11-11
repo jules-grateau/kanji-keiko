@@ -42,7 +42,7 @@
     <small class="streak-best" id="streakBest"></small>
   </div>
   <div class="panel today">
-    <div class="today-head"><h3>🎯 Objectif du jour</h3><b id="goalText"></b></div>
+    <div class="today-head"><h3>🎯 Objectif du jour <button class="help" data-srs-help aria-label="Comment marche la révision ?">?</button></h3><b id="goalText"></b></div>
     <div class="bar goal-bar"><i id="goalBar"></i></div>
     <p class="note today-stats"><b id="sDue">0</b> à réviser · <b id="sNew">0</b> nouveaux restants · <b id="sMast">0</b> maîtrisés</p>
     <div class="start-btns"><button class="primary" id="start">Commencer</button><button class="ghost hide" id="extra">+ 5 nouveaux en plus</button></div>
@@ -55,7 +55,7 @@
     <div class="row"><span class="note"><b id="knownCount">0</b> marqués « Je le maîtrise »</span><button class="ghost" id="openCatalog">Voir tous les kanji</button></div>
   </div>
   <div class="panel home-progress">
-    <div class="today-head"><h3>Ma progression</h3><b id="progressTotal"></b></div>
+    <div class="today-head"><h3>Ma progression <button class="help" data-srs-help aria-label="Comment marche la révision ?">?</button></h3><b id="progressTotal"></b></div>
     <div id="levels"></div>
   </div>
 </section>
@@ -65,6 +65,7 @@
   <div class="top"><button class="link" id="settingsBack">← Retour</button><span>Réglages</span><span></span></div>
   <div class="panel">
     <h3>Apprentissage</h3>
+    <p class="note"><button class="link" data-srs-help>Comment marche la révision ?</button> Toutes les règles, en clair.</p>
     <p class="set-label">Objectif quotidien</p>
     <div class="goal-picker">
       <button class="ghost step" id="goalMinus" aria-label="Diminuer l’objectif">−</button>
@@ -100,6 +101,12 @@
     <div class="row"><button class="ghost" id="export">Exporter ma progression</button><label class="ghost" style="cursor:pointer">Importer<input type="file" id="import" accept="application/json" hidden></label></div>
     <div class="row" style="margin-top:12px"><button class="link" id="reset">Réinitialiser la progression</button></div>
   </div>
+</section>
+
+<!-- Comment marche la révision : rempli par js/srs-page.js à partir des règles de js/srs.js -->
+<section id="srsInfo" class="hide">
+  <div class="top"><button class="link" id="srsBack">← Retour</button><span>Comment marche la révision</span><span></span></div>
+  <div id="srsBody"></div>
 </section>
 
 <!-- Tous les kanji : marquer ceux qu'on connaît déjà (js/catalog.js) -->
@@ -208,6 +215,7 @@
 <script src="js/streak.js"></script>
 <script src="js/goal.js"></script>
 <script src="js/settings-screen.js"></script>
+<script src="js/srs-page.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/home.js"></script>
 <script src="js/catalog.js"></script>

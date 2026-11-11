@@ -8,8 +8,8 @@ function renderHome() {
   renderToday(stats);
 }
 
-// Panneau « Ma progression » : un simple aperçu, rien à cliquer. Les nouveaux kanji viennent du niveau
-// « en cours » (N5 → N1) ; les niveaux exclus dans les Réglages sont grisés.
+// Panneau « Ma progression » : un simple aperçu, rien à cliquer. Trois barres par niveau : vus, appris,
+// maîtrisés. Les nouveaux kanji viennent du niveau « en cours » (N5 → N1) ; les niveaux exclus sont grisés.
 function renderProgress(stats) {
   const current = currentLevel();
   const seen = LEVELS.reduce((sum, n) => sum + stats[n].seen, 0);
@@ -21,8 +21,9 @@ function renderProgress(stats) {
       : n === current ? '<em class="lv-tag now">← en cours</em>'
       : o.seen === o.total ? '<em class="lv-tag done">✓</em>' : "";
     return `<div class="lv${skipped ? " skip" : ""}"><b>N${n}</b><div>`
-      + `<small>${o.seen} / ${o.total} vus · ${o.mastered} maîtrisés${o.due ? " · " + o.due + " à réviser" : ""} ${tag}</small>`
+      + `<small>${o.seen} / ${o.total} vus · ${o.learned} appris · ${o.mastered} maîtrisés${o.due ? " · " + o.due + " à réviser" : ""} ${tag}</small>`
       + `<div class="bar"><i style="width:${o.seen / o.total * 100}%"></i></div>`
+      + `<div class="bar"><i class="l" style="width:${o.learned / o.total * 100}%"></i></div>`
       + `<div class="bar"><i class="m" style="width:${o.mastered / o.total * 100}%"></i></div>`
       + `</div></div>`;
   }).join("");

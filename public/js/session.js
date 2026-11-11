@@ -1,11 +1,11 @@
 // Session d'entraînement : une carte par kanji, l'utilisateur l'écrit puis se corrige.
 
 let session = null;
-const REDO_GAP = 4;   // un kanji raté revient après au plus 4 autres cartes
+// Écart avant qu'un kanji raté revienne : REDO_GAP puis RELEARN_GAP cartes (constantes dans srs.js).
 
 function showScreen(id) {
-  ["login", "home", "settings", "catalog", "session", "end"].forEach(x => $(x).classList.toggle("hide", x !== id));
-  document.body.classList.toggle("focus", ["session", "catalog", "settings"].includes(id));   // on masque le titre pour gagner de la place
+  ["login", "home", "settings", "srsInfo", "catalog", "session", "end"].forEach(x => $(x).classList.toggle("hide", x !== id));
+  document.body.classList.toggle("focus", ["session", "catalog", "settings", "srsInfo"].includes(id));   // on masque le titre pour gagner de la place
   document.body.classList.toggle("on-home", id === "home");    // bouton ⚙ Réglages dans l'en-tête
   document.body.classList.toggle("catalog", id === "catalog");   // écran à hauteur fixe (voir style.css)
 }
@@ -18,7 +18,8 @@ function startSession(extraNew = 0) {
     fresh: new Set(q.fresh),   // nouveaux kanji de la session : leur première réponse compte pour l'objectif
     current: null,     // kanji affiché
     judged: false,     // réponse déjà jugée ?
-    redo: null,        // kanji raté à réinsérer dans la file
+    redo: null,        // { k, gap } : kanji à réinsérer dans la file, après `gap` cartes
+    learning: {},      // kanji ratés en réapprentissage → réussites encore nécessaires dans la séance
     done: 0, ok: 0, ko: 0,
     known: 0,                // marqués « Je le maîtrise » pendant la session
     seen: new Set(),
@@ -88,7 +89,7 @@ function remember(char) {
     char,
     entryBefore: progress[char] ? [...progress[char]] : null,
     state: {
-      queue: [...session.queue], redo: session.redo,
+      queue: [...session.queue], redo: session.redo, learning: { ...session.learning },
       done: session.done, ok: session.ok, ko: session.ko, known: session.known,
       seen: new Set(session.seen), missed: [...session.missed],
     },
@@ -120,25 +121,40 @@ function judge(ok) {
   session.judged = true;
   setHidden("grade", true);
 
-  const days = recordAnswer(char, ok);
+  // days = délai avant la prochaine révision, ou null si le kanji revient plus loin dans la séance.
+  let days = null;
+  if (!ok) {
+    // Raté : −2 boîtes, revient dans 4 cartes, et devra être réussi 2 fois avant de repartir.
+    answerWrong(char);
+    session.learning[char] = RELEARN_SUCCESSES;
+    session.redo = { k: char, gap: REDO_GAP };
+    session.ko++;
+    if (!session.missed.includes(char)) session.missed.push(char);
+  } else if (session.learning[char]) {
+    // Réapprentissage : encore une réussite à faire plus loin, ou c'est fini et il repart.
+    session.ok++;
+    if (--session.learning[char] > 0) {
+      relearnStep(char);
+      session.redo = { k: char, gap: RELEARN_GAP };
+    } else {
+      delete session.learning[char];
+      days = relearnDone(char);
+    }
+  } else {
+    session.ok++;
+    days = answerRight(char);
+  }
   if (markActiveToday()) session.streakExtended = true;
   if (session.fresh.has(char)) markIntroduced(char);
-  if (ok) {
-    session.ok++;
-  } else {
-    session.ko++;
-    session.redo = char;
-    if (!session.missed.includes(char)) session.missed.push(char);
-  }
   session.seen.add(char);
   session.done++;
   persist();
 
   const v = $("verdict");
   v.className = "verdict " + (ok ? "ok" : "ko");
-  v.textContent = ok
-    ? "Juste ✓ — prochain passage dans " + (days > 1 ? days + " jours" : days === 1 ? "1 jour" : "quelques instants")
-    : "Raté ✗ — il reviendra dans cette session";
+  v.textContent = !ok ? `Raté ✗ — il revient dans ${REDO_GAP} cartes`
+    : days === null ? "Juste ✓ — encore une fois plus loin dans la séance"
+    : "Juste ✓ — prochain passage dans " + (days > 1 ? days + " jours" : "1 jour");
   $("explain").open = !ok;   // en cas d'erreur, on déplie directement l'explication
   setHidden("nextrow", false);
   $("back").disabled = false;
@@ -150,7 +166,7 @@ function judgeCorrect() {
   const char = session.current;
   const days = judge(true);
   next();
-  const when = days > 1 ? "dans " + days + " jours" : days === 1 ? "demain" : "bientôt";
+  const when = days === null ? "plus loin dans la séance" : days > 1 ? "dans " + days + " jours" : "demain";
   showToast("Juste ✓ — " + char + " revient " + when + ".", goBack, 3500);
 }
 
@@ -164,7 +180,8 @@ function markCurrentKnown() {
     if (replacement) { session.queue.push(replacement); session.fresh.add(replacement); }
   }
   markKnown(char);
-  if (session.redo === char) session.redo = null;
+  if (session.redo && session.redo.k === char) session.redo = null;
+  delete session.learning[char];
   session.missed = session.missed.filter(k => k !== char);
   session.known++;
   session.seen.add(char);
@@ -177,7 +194,7 @@ function markCurrentKnown() {
 
 function next() {
   if (session.redo) {
-    session.queue.splice(Math.min(REDO_GAP, session.queue.length), 0, session.redo);
+    session.queue.splice(Math.min(session.redo.gap, session.queue.length), 0, session.redo.k);
     session.redo = null;
   }
   nextCard();

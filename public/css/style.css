@@ -168,6 +168,7 @@ textarea { width: 100%; resize: vertical; }
 .bar { height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 5px; }
 .bar i { display: block; height: 100%; background: var(--ink); opacity: .8; }
 .bar i.m { background: var(--ok); opacity: 1; }
+.bar i.l { background: var(--indigo); opacity: .9; }   /* appris */
 
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
 .stats b { display: block; font-family: "Shippori Mincho", serif; font-size: 28px; }
@@ -688,3 +689,29 @@ dialog.ask p { margin: 0 0 16px; }
 .home-top .streak-main { min-width: 0; flex: none; }
 .home-top .today-head { flex-wrap: wrap; row-gap: 2px; }
 .home-top .start-btns button { padding-inline: 14px; }
+
+/* ============================================================
+   Page « Comment marche la révision »
+   ============================================================ */
+#srsInfo .panel p { margin: 0 0 10px; }
+#srsInfo .panel p:last-child { margin-bottom: 0; }
+.srs-list { margin: 10px 0 0; padding-left: 20px; }
+.srs-list li { margin-bottom: 8px; }
+.srs-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 4px 0 10px; }
+.srs-table th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+.srs-table td { padding: 5px 6px; border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, transparent); }
+.srs-table td small { color: var(--muted); }
+.srs-table tr.hl td { background: color-mix(in srgb, var(--ok) 8%, transparent); }
+.tier { font-size: 12px; font-weight: 700; border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; color: var(--muted); }
+.tier.l { color: var(--indigo); border-color: var(--indigo); }
+.tier.m { color: var(--ok); border-color: var(--ok); }
+#srsInfo { max-width: 720px; margin-inline: auto; }
+
+/* Petit « ? » à côté d'un titre : ouvre la page d'explication */
+.help {
+  width: 18px; height: 18px; padding: 0; margin-left: 4px;
+  border: 1px solid var(--line); border-radius: 50%; background: none;
+  color: var(--muted); font-size: 11px; line-height: 1; vertical-align: 1px;
+}
+.help:hover { color: var(--ink); border-color: var(--ink); }
+.verdict:not(:empty) { cursor: help; }
