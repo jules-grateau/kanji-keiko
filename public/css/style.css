@@ -339,15 +339,20 @@ summary { cursor: pointer; color: var(--muted); font-size: 13px; letter-spacing:
 .comp b { display: block; font-family: "Shippori Mincho", serif; font-size: 30px; line-height: 1.1; font-weight: 500; }
 .comp span { font-size: 12px; color: var(--muted); }
 
-.mn {
-  white-space: pre-wrap;
+/* Kanji de forme proche */
+.similar {
   background: var(--paper);
   border-left: 3px solid var(--red);
-  padding: 10px 12px;
+  padding: 8px 12px;
   border-radius: 0 8px 8px 0;
   font-size: 15px;
-  margin-top: 10px;
+  margin: 10px 0 0;
 }
+
+/* Liens vers WaniKani, Kanshudo, Jisho */
+.links { display: flex; flex-wrap: wrap; gap: 8px; }
+.links a { color: var(--ink); text-decoration: none; }
+.links a:hover { border-color: var(--ink); }
 
 /* ============================================================
    Fin de session
@@ -586,14 +591,16 @@ body.catalog .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
     --ws: min(840px, calc((100dvh - 210px) * 1.5 + 8px), calc(100vw - 400px));
     display: grid;
     grid-template-columns: minmax(260px, 1fr) var(--ws);
-    grid-template-rows: auto auto auto 1fr auto auto;   /* la ligne 1fr absorbe la hauteur du dessin */
+    /* Le bloc dessin + boutons occupe toute la colonne de droite : il ne dépend pas de la
+       hauteur de la colonne de gauche (qui s'allonge avec « Décortiquer »). La ligne 1fr
+       absorbe le reste. */
+    grid-template-rows: auto auto auto auto 1fr;
     grid-template-areas:
-      "meta  ws"
-      "mean  ws"
-      "read  ws"
-      "res   ws"
-      "res   act"
-      "res   verdict";
+      "meta  play"
+      "mean  play"
+      "read  play"
+      "res   play"
+      ".     play";
     column-gap: 24px;
     align-items: start;
   }
@@ -601,9 +608,8 @@ body.catalog .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
   #card > .mean { grid-area: mean; }
   #card > .readings { grid-area: read; }
   #card > #result { grid-area: res; }
-  #card > .workspace { grid-area: ws; margin: 0 0 12px; }
-  #card > .actions { grid-area: act; }
-  #card > .verdict { grid-area: verdict; }
+  #card > .card-play { grid-area: play; }
+  #card .workspace { margin: 0 0 12px; }
   #card .lab { text-align: left; }
   #card .steps { justify-content: flex-start; }
 

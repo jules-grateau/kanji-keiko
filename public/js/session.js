@@ -174,7 +174,8 @@ function next() {
   nextCard();
 }
 
-// Section « Décortiquer ce kanji » : composants, radicaux WaniKani, astuce et note perso.
+// Section « Décortiquer ce kanji » : composants, radicaux WaniKani, kanji à ne pas confondre,
+// liens vers des astuces écrites par des humains, et note perso.
 function renderExplanation(char) {
   const k = kanjiInfo(char);
   $("comps").innerHTML = isElementary(k)
@@ -183,7 +184,11 @@ function renderExplanation(char) {
   $("wk").textContent = k.wkRadicals.length
     ? "Radicaux WaniKani : " + k.wkRadicals.join(", ") + (k.wkLevel ? " · niveau WK " + k.wkLevel : "")
     : "";
-  $("mn").textContent = mnemonicText(k);
+  const similar = similarText(k);
+  $("similar").textContent = similar ? "Ne pas confondre avec " + similar + "." : "";
+  setHidden("similar", !similar);
+  $("links").innerHTML = externalLinks(k).map(l =>
+    `<a class="ghost" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.name)} ↗</a>`).join("");
   $("note").value = notes[char] || "";
 }
 

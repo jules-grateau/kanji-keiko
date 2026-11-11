@@ -35,26 +35,18 @@ function componentName(c) {
 // Kanji élémentaire = son seul composant, c'est lui-même.
 const isElementary = k => k.components.length === 1 && k.components[0] === k.char;
 
-// Astuce générée automatiquement à partir des composants et des kanji similaires.
-function mnemonicText(k) {
-  const meaning = k.meanings[0].toLowerCase();
-  const parts = [];
+// Kanji de forme proche, à ne pas confondre : "毎（every）, 梅（plum）", ou "" s'il n'y en a pas.
+function similarText(k) {
+  return [...k.similar].map(x => x + "（" + componentName(x) + "）").join(", ");
+}
 
-  if (isElementary(k)) {
-    parts.push(`Forme : kanji de base. Dessine-le comme un pictogramme de « ${meaning} » et retiens ses ${k.strokes} traits.`);
-  } else {
-    const story = k.components.map(c => c + " (" + (componentName(c) || "?") + ")").join(" + ");
-    parts.push(`Histoire : ${story}. Invente une scène qui réunit ces éléments et aboutit à « ${meaning} » ; plus elle est absurde, mieux elle reste.`);
-  }
-
-  const how = k.components.length > 1
-    ? "composant par composant, de gauche à droite et de haut en bas"
-    : "d’un seul bloc, de haut en bas";
-  parts.push(`Écriture : ${k.strokes} traits au total ; trace ${how}.`);
-
-  if (k.similar) {
-    const list = [...k.similar].map(x => x + "（" + componentName(x) + "）").join(", ");
-    parts.push(`Piège de forme : ne le confonds pas avec ${list}.`);
-  }
-  return parts.join("\n");
+// Pages d'autres sites avec des astuces écrites par des humains (on ne peut pas les copier : droits d'auteur).
+// WaniKani ne couvre pas tous les kanji : on ne propose le lien que s'il a un niveau WaniKani.
+function externalLinks(k) {
+  const c = encodeURIComponent(k.char);
+  return [
+    k.wkLevel ? { name: "WaniKani", url: "https://www.wanikani.com/kanji/" + c } : null,
+    { name: "Kanshudo", url: "https://www.kanshudo.com/kanji/" + c },
+    { name: "Jisho", url: "https://jisho.org/search/" + c + "%20%23kanji" },
+  ].filter(Boolean);
 }
