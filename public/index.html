@@ -26,6 +26,11 @@
 </section>
 
 <section id="home" class="hide">
+  <!-- Seulement pour les nouveaux venus (progression vide) -->
+  <div class="panel welcome hide" id="welcome">
+    <p><b>👋 Tu connais déjà des kanji ?</b><br>Marque-les pour ne pas les revoir en session.</p>
+    <div class="row"><button class="primary" id="welcomeGo">Marquer ceux que je connais</button><button class="link" id="welcomeLater">Plus tard</button></div>
+  </div>
   <div class="panel streak" id="streak">
     <span class="flame" aria-hidden="true">🔥</span>
     <div class="streak-main"><b id="streakCount">0</b> <span id="streakUnit">jour de suite</span><small id="streakHint"></small></div>
@@ -40,6 +45,11 @@
       <label class="chk"><input type="checkbox" id="hard"> Mode difficile (sens seul)</label>
     </div>
   </div>
+  <!-- Accès à l'écran « Tous les kanji » -->
+  <div class="panel">
+    <h3>Tous les kanji</h3>
+    <div class="row"><span class="note"><b id="knownCount">0</b> marqués « Je le maîtrise »</span><button class="ghost" id="openCatalog">Voir tous les kanji</button></div>
+  </div>
   <div class="panel">
     <h3>Aujourd’hui</h3>
     <div class="stats"><div><b id="sDue">0</b><span>à réviser</span></div><div><b id="sNew">0</b><span>nouveaux</span></div><div><b id="sMast">0</b><span>maîtrisés</span></div></div>
@@ -49,22 +59,36 @@
     <div class="row"><span class="note" id="who"></span><button class="link" id="logout">Se déconnecter</button></div>
     <p class="note" id="syncnote"></p>
   </div>
+</section>
 
-  <!-- Rempli par js/known.js ; masqué tant qu’aucun kanji n’est marqué -->
-  <details class="panel known-panel hide" id="knownPanel">
-    <summary><h3>Kanji maîtrisés <span class="count" id="knownCount">0</span></h3></summary>
-    <p class="note">Ceux que tu as marqués « Je le maîtrise » : ils ne te sont plus proposés. Touche un kanji pour le revoir.</p>
-    <div class="kchips" id="knownList"></div>
-    <div class="known-detail hide" id="knownDetail">
-      <div class="kd-char jp" id="kdChar"></div>
-      <div class="kd-info">
-        <small id="kdLevel"></small>
-        <b id="kdMean"></b>
-        <span class="jp" id="kdReadings"></span>
-        <button class="ghost" id="kdRemove">Remettre en révision</button>
-      </div>
+<!-- Tous les kanji : marquer ceux qu'on connaît déjà (js/catalog.js) -->
+<section id="catalog" class="hide">
+  <!-- L'écran tient dans la fenêtre : seule la grille défile, la barre « Valider » reste en bas -->
+  <div class="top"><button class="link" id="catBack">← Retour</button><span>Tous les kanji</span><span></span></div>
+  <div class="cat-tools">
+    <div class="cat-tabs" id="catTabs"></div>
+    <input type="search" id="catSearch" placeholder="Sens ou lecture" aria-label="Chercher un kanji par sens ou lecture">
+  </div>
+  <div class="row cat-head"><span class="cat-summary" id="catSummary"></span><button class="ghost" id="catAll">Tout sélectionner</button></div>
+  <p class="note cat-legend">Sélectionne ceux que tu connais, puis valide. <span class="legend known">✓</span> maîtrisé · <span class="legend learning">•</span> en cours · appui long : détail</p>
+  <div class="cat-detail hide" id="catDetail">
+    <div class="kd-char jp" id="cdChar"></div>
+    <div class="kd-info">
+      <small id="cdLevel"></small>
+      <b id="cdMean"></b>
+      <span class="jp" id="cdReadings"></span>
+      <button class="ghost" id="cdToggle"></button>
     </div>
-  </details>
+    <button class="link cd-close" id="cdClose" aria-label="Fermer le détail">✕</button>
+  </div>
+  <div class="cat-scroll" id="catScroll">
+    <div class="kchips" id="catGrid"></div>
+    <p class="note hide" id="catEmpty">Aucun kanji ne correspond.</p>
+  </div>
+  <div class="cat-actions">
+    <span id="catPending"></span>
+    <div class="cat-buttons"><button class="ghost" id="catClear">Tout désélectionner</button><button class="primary" id="catValidate">Valider ✓</button></div>
+  </div>
 </section>
 
 <section id="session" class="hide">
@@ -136,7 +160,7 @@
 <script src="js/streak.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/home.js"></script>
-<script src="js/known.js"></script>
+<script src="js/catalog.js"></script>
 <script src="js/pad.js"></script>
 <script src="js/stroke-order.js"></script>
 <script src="js/session.js"></script>

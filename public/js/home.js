@@ -2,7 +2,7 @@
 
 function renderHome() {
   renderStreak();
-  renderKnownList();
+  renderCatalogEntry();
   const stats = levelStats();
 
   $("levels").innerHTML = LEVELS.map(n => {

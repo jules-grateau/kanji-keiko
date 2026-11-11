@@ -438,20 +438,83 @@ summary { cursor: pointer; color: var(--muted); font-size: 13px; letter-spacing:
 .end-known { text-align: center; }
 
 /* ============================================================
-   Accueil : kanji maîtrisés
+   Accueil : carte de bienvenue (nouveaux venus)
    ============================================================ */
-.known-panel summary { list-style: none; }
-.known-panel summary::-webkit-details-marker { display: none; }
-.known-panel summary h3 { margin: 0; display: flex; align-items: center; gap: 8px; }
-.known-panel summary h3::after { content: "▸"; margin-left: auto; transition: transform .2s; }
-.known-panel[open] summary h3::after { transform: rotate(90deg); }
-.known-panel summary h3 .count { letter-spacing: 0; color: var(--ink); font-weight: 700; }
-.known-panel[open] summary { margin-bottom: 6px; }
-/* .panel et details ont chacun une bordure : on garde celle du panneau */
-details.panel { border-top: 1px solid var(--line); margin-top: 0; padding-top: 16px; }
+.welcome { border-color: var(--red); background: color-mix(in srgb, var(--red) 6%, var(--card)); }
+.welcome p { margin: 0 0 12px; }
 
-.kchips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+/* ============================================================
+   Tous les kanji : sélection puis validation
+   ============================================================ */
+/* L'écran tient dans la fenêtre : en-tête en haut, grille qui défile, barre « Valider » en bas.
+   (main a 22px de marge en haut ; on la réduit en bas pour cet écran.) */
+body.catalog main { padding-bottom: 12px; }
+#catalog {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 34px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+}
+#catalog.hide { display: none; }
+#catalog > * { flex: none; }
+
+.cat-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.cat-tabs { display: flex; gap: 4px; }
+.cat-tabs button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  padding: 6px 10px;
+  font-family: "Shippori Mincho", serif;
+  font-weight: 700;
+}
+.cat-tabs button[aria-pressed="true"] { border-color: var(--red); background: color-mix(in srgb, var(--red) 10%, var(--card)); }
+.cat-tools input[type=search] {
+  flex: 1;
+  min-width: 140px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.cat-summary { font-weight: 700; font-size: 14px; }
+.cat-legend { font-size: 12.5px; margin: 6px 0 8px; }
+.legend { font-weight: 700; }
+.legend.known { color: var(--ok); }
+.legend.learning { color: var(--indigo); }
+
+/* Seule cette zone défile */
+#catalog .cat-scroll {
+  flex: 1;
+  min-height: 120px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 4px 10px;
+}
+
+.cat-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding-top: 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.cat-buttons { display: flex; gap: 8px; margin-left: auto; }
+.cat-buttons .primary { padding: 10px 18px; }
+.cat-buttons .ghost:disabled { opacity: .35; cursor: default; }
+/* Le bandeau « Annuler » passe au-dessus de la barre Valider */
+body.catalog .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+
+.kchips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
 .kchip {
+  position: relative;
   width: 44px;
   height: 44px;
   padding: 0;
@@ -459,19 +522,43 @@ details.panel { border-top: 1px solid var(--line); margin-top: 0; padding-top: 1
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--paper);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;   /* pas de menu système sur appui long (iOS) */
 }
-.kchip[aria-pressed="true"] { border-color: var(--red); background: color-mix(in srgb, var(--red) 10%, var(--paper)); }
+.kchip.known { border-color: var(--ok); color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, var(--paper)); }
+.kchip.known::after,
+.kchip.learning::after {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  font-family: "Zen Kaku Gothic New", sans-serif;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+}
+.kchip.known::after { content: "✓"; }
+.kchip.learning::after { content: "•"; color: var(--indigo); font-size: 14px; }
+/* Sélectionné, pas encore validé : pointillés verts (à marquer) ou rouge barré (à retirer) */
+.kchip.pend { border: 2px dashed var(--ok); background: color-mix(in srgb, var(--ok) 10%, var(--paper)); }
+.kchip.known.pend { border-color: var(--red); color: var(--red); background: var(--paper); text-decoration: line-through; }
+.kchip.known.pend::after { content: "−"; color: var(--red); font-size: 13px; }
+.kchip.sel { outline: 2px solid var(--ink); outline-offset: 1px; }
 
-.known-detail {
+/* Détail du kanji (appui long) */
+.cat-detail {
+  position: relative;
   display: flex;
   gap: 14px;
   align-items: center;
-  padding: 12px;
+  margin-bottom: 8px;
+  padding: 10px 36px 10px 12px;
   border-radius: 10px;
-  background: var(--paper);
+  background: var(--card);
   border: 1px solid var(--line);
 }
-.kd-char { font-size: 64px; line-height: 1; }
-.kd-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.kd-char { font-size: 56px; line-height: 1; }
+.kd-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .kd-info small { color: var(--muted); font-size: 12px; }
-.kd-info .ghost { align-self: flex-start; margin-top: 6px; }
+.kd-info .ghost { align-self: flex-start; margin-top: 4px; padding: 6px 12px; }
+.cd-close { position: absolute; top: 8px; right: 10px; text-decoration: none; font-size: 16px; }

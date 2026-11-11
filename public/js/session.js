@@ -4,8 +4,9 @@ let session = null;
 const REDO_GAP = 4;   // un kanji raté revient après au plus 4 autres cartes
 
 function showScreen(id) {
-  ["login", "home", "session", "end"].forEach(x => $(x).classList.toggle("hide", x !== id));
-  document.body.classList.toggle("focus", id === "session");   // en session, on masque le titre pour gagner de la place
+  ["login", "home", "catalog", "session", "end"].forEach(x => $(x).classList.toggle("hide", x !== id));
+  document.body.classList.toggle("focus", id === "session" || id === "catalog");   // on masque le titre pour gagner de la place
+  document.body.classList.toggle("catalog", id === "catalog");   // écran à hauteur fixe (voir style.css)
 }
 
 function startSession() {
