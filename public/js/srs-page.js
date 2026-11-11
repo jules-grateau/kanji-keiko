@@ -73,7 +73,9 @@ function renderSrsPage() {
         Tant que tu ne l'as pas réussi <b>${RELEARN_SUCCESSES} fois</b>, il reste dans la séance
         (la 2<sup>e</sup> fois environ ${RELEARN_GAP} cartes plus loin) : on vérifie qu'il est vraiment retenu, pas juste encore en tête.
         Ensuite, il repart avec le délai de sa boîte (au moins demain).</li>
-      <li><b>Toutes</b> les révisions prévues sont dans la séance, sans plafond, quel que soit leur niveau.
+      <li>Deux séances séparées : <b>Réviser</b> (les kanji prévus aujourd'hui) et <b>Apprendre</b> (les nouveaux kanji).
+        Mieux vaut réviser d'abord, pour ne pas laisser les révisions s'accumuler.</li>
+      <li><b>Toutes</b> les révisions prévues sont dans la séance de révision, sans plafond, quel que soit leur niveau.
         Tu peux t'arrêter quand tu veux : le reste t'attend.</li>
     </ul>
   </div>
@@ -102,7 +104,7 @@ function renderSrsPage() {
     <ul class="srs-list">
       <li>Les nouveaux kanji viennent du N5, puis du N4… jusqu'au N1. Tu peux sauter des niveaux dans les Réglages.</li>
       <li>L'<b>objectif du jour</b> compte les nouveaux kanji découverts aujourd'hui (dès ta première réponse).
-        Les révisions ne comptent pas dedans. Une fois atteint, « + ${EXTRA_STEP} nouveaux en plus » permet d'aller plus loin.</li>
+        Les révisions ne comptent pas dedans. Une fois atteint, « + ${EXTRA_STEP} en plus » permet d'aller plus loin.</li>
       <li><b>Je le maîtrise</b> : le kanji sort des révisions pour toujours (il compte comme maîtrisé).</li>
       <li><b>À réviser</b> (écran « Tous les kanji ») : le kanji repart en boîte 0, dans ta prochaine séance,
         et compte dans l'objectif du jour.</li>

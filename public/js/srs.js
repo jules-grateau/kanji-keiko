@@ -124,16 +124,15 @@ const currentLevel = () => activeLevels().find(n => KANJI.some(r => r[1] === n &
 // Kanji jamais vus des niveaux actifs : les prochains à découvrir.
 const newKanji = () => levelPool().filter(k => !progress[k]);
 
-// Kanji à travailler : TOUTES les révisions échues, de tous les niveaux (un kanji appris se révise,
-// même hors des niveaux choisis), les plus anciennes d'abord et sans plafond pour respecter le SRS,
-// + les nouveaux des niveaux actifs (N5 d'abord) qui restent pour l'objectif du jour (ou `extraNew` au-delà).
-function buildQueue(extraNew = 0) {
-  const due = Object.keys(progress)
-    .filter(k => KANJI_BY_CHAR[k] && isDue(progress[k]))
-    .sort((a, b) => progress[a][1] - progress[b][1]);
-  const fresh = newKanji().slice(0, extraNew || goalRemaining());
-  return { due, fresh };
-}
+// Révisions : TOUTES les révisions échues, de tous les niveaux (un kanji appris se révise, même hors
+// des niveaux choisis), les plus anciennes d'abord et sans plafond pour respecter le SRS.
+const dueKanji = () => Object.keys(progress)
+  .filter(k => KANJI_BY_CHAR[k] && isDue(progress[k]))
+  .sort((a, b) => progress[a][1] - progress[b][1]);
+
+// Apprentissage : les nouveaux des niveaux actifs (N5 d'abord) qui restent pour l'objectif du jour,
+// ou `extraNew` de plus une fois l'objectif atteint.
+const freshKanji = (extraNew = 0) => newKanji().slice(0, extraNew || goalRemaining());
 
 // Marque un kanji comme maîtrisé. Renvoie l'entrée d'avant, pour pouvoir annuler.
 function markKnown(k) {

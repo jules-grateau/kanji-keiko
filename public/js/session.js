@@ -10,12 +10,14 @@ function showScreen(id) {
   document.body.classList.toggle("catalog", id === "catalog");   // écran à hauteur fixe (voir style.css)
 }
 
-// extraNew : nombre de nouveaux kanji en plus de l'objectif (bouton « + 5 nouveaux en plus »).
-function startSession(extraNew = 0) {
-  const q = buildQueue(extraNew);
+// Deux sortes de séances, séparées : « review » (révisions dues) et « learn » (nouveaux kanji).
+// extraNew : nouveaux kanji en plus de l'objectif (bouton « + 5 en plus »).
+function startSession(mode, extraNew = 0) {
+  const queue = mode === "review" ? dueKanji() : freshKanji(extraNew);
   session = {
-    queue: q.due.concat(q.fresh),
-    fresh: new Set(q.fresh),   // nouveaux kanji de la session : leur première réponse compte pour l'objectif
+    mode,
+    queue: [...queue],
+    fresh: new Set(mode === "learn" ? queue : []),   // nouveaux kanji : leur 1re réponse compte pour l'objectif
     current: null,     // kanji affiché
     judged: false,     // réponse déjà jugée ?
     redo: null,        // { k, gap } : kanji à réinsérer dans la file, après `gap` cartes
@@ -223,7 +225,8 @@ function finishSession() {
   $("eKo").textContent = session.ko;
   $("eAll").textContent = session.seen.size;
   const g = goalInfo();
-  $("eGoal").textContent = g.reached
+  $("eTitle").textContent = session.mode === "review" ? "Révisions terminées" : "Apprentissage terminé";
+  $("eGoal").textContent = session.mode === "review" ? "" : g.reached
     ? `🎯 Objectif du jour atteint : ${g.done} / ${g.goal} ✓`
     : `🎯 ${g.done} / ${g.goal} nouveaux aujourd’hui`;
   const { count } = streakInfo();
@@ -239,8 +242,8 @@ function finishSession() {
 }
 
 function initSession() {
-  $("start").onclick = () => startSession();
-  $("extra").onclick = () => startSession(EXTRA_STEP);
+  $("reviewBtn").onclick = () => startSession("review");
+  $("learnBtn").onclick = () => startSession("learn", goalInfo().reached ? EXTRA_STEP : 0);
   $("quit").onclick = finishSession;
   $("again").onclick = () => { showScreen("home"); renderHome(); };
 

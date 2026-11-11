@@ -29,27 +29,33 @@ function renderProgress(stats) {
   }).join("");
 }
 
-// Panneau « Objectif du jour » : progression, compteurs et bouton pour lancer la session.
+// Panneau « Objectif du jour » : progression, compteurs, et les deux boutons Réviser / Apprendre.
 function renderToday(stats) {
-  const g = goalInfo(), q = buildQueue();
+  const g = goalInfo(), due = dueKanji(), fresh = freshKanji();
   $("goalText").textContent = g.reached
     ? `${g.done} / ${g.goal} ✓ atteint !`
     : `${g.done} / ${g.goal} nouveaux`;
   $("goalBar").style.width = Math.min(100, g.done / g.goal * 100) + "%";
   $("goalBar").classList.toggle("m", g.reached);   // vert une fois atteint
 
-  $("sDue").textContent = q.due.length;
-  $("sNew").textContent = q.fresh.length;
+  $("sDue").textContent = due.length;
+  $("sNew").textContent = fresh.length;
   $("sMast").textContent = Object.values(stats).reduce((sum, o) => sum + o.mastered, 0);
 
-  // Objectif atteint : « Réviser » s'il reste des révisions, et la possibilité d'en apprendre plus.
-  const start = $("start");
-  if (g.reached) start.textContent = q.due.length ? `Réviser (${q.due.length})` : "Rien à réviser";
-  else start.textContent = g.done ? "Continuer" : "Commencer";
-  start.disabled = !(q.due.length + q.fresh.length);
-  setHidden("start", g.reached && !q.due.length);
-  setHidden("extra", !g.reached);
-  $("extra").disabled = !newKanji().length;
+  // Deux séances séparées : réviser, ou apprendre de nouveaux kanji.
+  const review = $("reviewBtn"), learn = $("learnBtn");
+  review.textContent = due.length ? `↻ Réviser · ${due.length}` : "Rien à réviser ✓";
+  review.disabled = !due.length;
+  if (g.reached) {
+    learn.textContent = `＋ ${EXTRA_STEP} en plus`;
+    learn.disabled = !newKanji().length;
+  } else {
+    learn.textContent = fresh.length ? `＋ Apprendre · ${fresh.length}` : "Plus de nouveaux kanji";
+    learn.disabled = !fresh.length;
+  }
+  // Bouton plein = celui à faire d'abord : les révisions s'il y en a (pour ne pas les laisser s'accumuler).
+  review.className = due.length ? "primary" : "ghost";
+  learn.className = !due.length && !learn.disabled ? "primary" : "ghost";
 }
 
 function initHome() {

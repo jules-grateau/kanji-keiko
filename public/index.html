@@ -62,7 +62,7 @@
     <div class="today-head"><h3>🎯 Objectif du jour <button class="help" data-srs-help aria-label="Comment marche la révision ?">?</button></h3><b id="goalText"></b></div>
     <div class="bar goal-bar"><i id="goalBar"></i></div>
     <p class="note today-stats"><b id="sDue">0</b> à réviser · <b id="sNew">0</b> nouveaux restants · <b id="sMast">0</b> maîtrisés</p>
-    <div class="start-btns"><button class="primary" id="start">Commencer</button><button class="ghost hide" id="extra">+ 5 nouveaux en plus</button></div>
+    <div class="start-btns"><button class="primary" id="reviewBtn">↻ Réviser</button><button class="ghost" id="learnBtn">＋ Apprendre</button></div>
   </div>
   </div>
   <!-- Accès à l'écran « Tous les kanji » -->
@@ -211,7 +211,7 @@
 
 <section id="end" class="hide">
   <div class="panel">
-    <h3>Session terminée</h3>
+    <h3 id="eTitle">Séance terminée</h3>
     <div class="stats"><div><b id="eOk">0</b><span>justes</span></div><div><b id="eKo">0</b><span>ratés</span></div><div><b id="eAll">0</b><span>vus</span></div></div>
     <p class="end-streak" id="eGoal"></p>
     <p class="end-streak" id="eStreak"></p>

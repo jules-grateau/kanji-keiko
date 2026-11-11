@@ -766,3 +766,7 @@ dialog.ask p { margin: 0 0 16px; }
 .source dd a { color: var(--ink); }
 .sources-foot { margin: 4px 0 20px; }
 @media (max-width: 480px) { .source dl { grid-template-columns: 1fr; } .source dd { margin-bottom: 6px; } }
+
+/* Objectif du jour : Réviser et Apprendre, même taille */
+.start-btns button { flex: 1 1 150px; min-height: 44px; padding: 10px 14px; border-radius: 10px; font-size: 15px; font-weight: 700; }
+.start-btns .primary:disabled { opacity: .35; }
