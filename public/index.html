@@ -46,16 +46,17 @@
     <p class="note today-stats"><b id="sDue">0</b> à réviser · <b id="sNew">0</b> nouveaux restants · <b id="sMast">0</b> maîtrisés</p>
     <div class="start-btns"><button class="primary" id="start">Commencer</button><button class="ghost hide" id="extra">+ 5 nouveaux en plus</button></div>
   </div>
+  <!-- Accès à l'écran « Tous les kanji » -->
+  <div class="panel">
+    <h3>Tous les kanji</h3>
+    <p class="note">Ajoute à tes révisions les kanji de ton cours, ou marque ceux que tu connais déjà.</p>
+    <div class="row"><span class="note"><b id="knownCount">0</b> marqués « Je le maîtrise »</span><button class="ghost" id="openCatalog">Voir tous les kanji</button></div>
+  </div>
   </div>
   <div class="home-col">
   <div class="panel">
     <h3>Niveaux à travailler</h3>
     <div id="levels"></div>
-  </div>
-  <!-- Accès à l'écran « Tous les kanji » -->
-  <div class="panel">
-    <h3>Tous les kanji</h3>
-    <div class="row"><span class="note"><b id="knownCount">0</b> marqués « Je le maîtrise »</span><button class="ghost" id="openCatalog">Voir tous les kanji</button></div>
   </div>
   </div>
 </section>
@@ -105,10 +106,10 @@
   <div class="top"><button class="link" id="catBack">← Retour</button><span>Tous les kanji</span><span></span></div>
   <div class="cat-tools">
     <div class="cat-tabs" id="catTabs"></div>
-    <input type="search" id="catSearch" placeholder="Sens ou lecture" aria-label="Chercher un kanji par sens ou lecture">
+    <input type="search" id="catSearch" placeholder="Sens, lecture, ou colle des kanji" aria-label="Chercher par sens ou lecture, ou coller une liste de kanji">
   </div>
   <div class="row cat-head"><span class="cat-summary" id="catSummary"></span><button class="ghost" id="catAll">Tout sélectionner</button></div>
-  <p class="note cat-legend">Sélectionne ceux que tu connais, puis valide. <span class="legend known">✓</span> maîtrisé · <span class="legend learning">•</span> en cours · appui long : détail</p>
+  <p class="note cat-legend">Sélectionne des kanji puis choisis : à réviser, ou maîtrisés. <span class="legend known">✓</span> maîtrisé · <span class="legend learning">•</span> en cours · appui long : détail</p>
   <div class="cat-detail hide" id="catDetail">
     <div class="kd-char jp" id="cdChar"></div>
     <div class="kd-info">
@@ -122,10 +123,11 @@
   <div class="cat-scroll" id="catScroll">
     <div class="kchips" id="catGrid"></div>
     <p class="note hide" id="catEmpty">Aucun kanji ne correspond.</p>
+    <p class="note" id="catMissing"></p>
   </div>
   <div class="cat-actions">
-    <span id="catPending"></span>
-    <div class="cat-buttons"><button class="ghost" id="catClear">Tout désélectionner</button><button class="primary" id="catValidate">Valider ✓</button></div>
+    <span><span id="catPending"></span> <button class="link" id="catClear">Effacer</button></span>
+    <div class="cat-buttons"><button class="ghost" id="catReview">↻ À réviser</button><button class="primary" id="catKnown">✓ Je les maîtrise</button></div>
   </div>
 </section>
 

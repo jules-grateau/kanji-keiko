@@ -1,6 +1,7 @@
-// Écran « Tous les kanji » : parcourir toute la liste et marquer ceux qu'on connaît déjà.
-// Toucher un kanji le sélectionne (rien n'est enregistré) ; « Valider » applique la sélection :
-// les kanji nouveaux ou en cours passent en « Je le maîtrise », les kanji déjà maîtrisés reviennent en révision.
+// Écran « Tous les kanji » : parcourir toute la liste, marquer ceux qu'on connaît déjà, ou en ajouter
+// à ses révisions (ex. les kanji vus en cours : on colle la liste dans la recherche).
+// Toucher un kanji le sélectionne (rien n'est enregistré) ; puis un des deux boutons du bas :
+// « À réviser » (ils arrivent dans la prochaine session) ou « Je les maîtrise ».
 // Appui long ou clic droit : affiche seulement le détail du kanji.
 
 const KEY_WELCOME = "kanji-welcome-v1";   // carte de bienvenue écartée (« Plus tard »)
@@ -37,11 +38,15 @@ function matchesQuery(r, q) {
     || r[4].concat(r[5]).some(x => clean(x).startsWith(kana));
 }
 
+// Kanji présents dans un texte collé (au moins deux) : la liste du cours, par exemple.
+const pastedKanji = q => [...new Set(q.match(/\p{Script=Han}/gu) || [])].filter(c => c !== "々");   // 々 = signe de répétition
+
 function visibleKanji() {
   const q = catalogQuery.trim().toLowerCase();
-  return q
-    ? KANJI.filter(r => matchesQuery(r, q)).map(r => r[0])
-    : KANJI.filter(r => r[1] === catalogLevel).map(r => r[0]);
+  if (!q) return KANJI.filter(r => r[1] === catalogLevel).map(r => r[0]);
+  const pasted = pastedKanji(q);
+  if (pasted.length > 1) return pasted.filter(k => KANJI_BY_CHAR[k]);   // dans l'ordre du texte
+  return KANJI.filter(r => matchesQuery(r, q)).map(r => r[0]);
 }
 
 function chipHtml(k) {
@@ -67,25 +72,28 @@ function refreshChip(k) {
   if (btn) btn.outerHTML = chipHtml(k);
 }
 
-// Compteurs de l'onglet, bouton « Tout sélectionner » et barre « Valider ».
+// Compteurs de l'onglet, bouton « Tout sélectionner » et barre d'actions du bas.
 function renderCatalogStatus() {
   const list = visibleKanji();
   const known = list.filter(isKnown).length;
   const what = catalogQuery ? "Recherche" : "N" + catalogLevel;
   $("catSummary").textContent = `${what} · ${list.length} kanji · ${known} ✓`;
 
-  const selectable = list.filter(k => !isKnown(k));
-  const allSelected = selectable.length > 0 && selectable.every(k => catalogPending.has(k));
-  $("catAll").textContent = allSelected ? "Tout désélectionner" : "Tout sélectionner";
-  $("catAll").disabled = !selectable.length;
+  // Kanji collés qui ne sont pas dans la liste de l'appli (hors JLPT) : on le signale.
+  const missing = pastedKanji(catalogQuery).filter(k => !KANJI_BY_CHAR[k]);
+  $("catMissing").textContent = missing.length > 0 && pastedKanji(catalogQuery).length > 1
+    ? "Pas dans la liste de l’appli : " + missing.join(" ") : "";
 
-  const pend = [...catalogPending];
-  const add = pend.filter(k => !isKnown(k)).length, remove = pend.length - add;
-  const parts = [];
-  if (add) parts.push(`+${add} maîtrisé${add > 1 ? "s" : ""}`);
-  if (remove) parts.push(`−${remove} remis en révision`);
-  $("catPending").textContent = parts.length ? parts.join(" · ") : "Touche les kanji que tu connais.";
-  $("catClear").disabled = $("catValidate").disabled = !pend.length;
+  const allSelected = list.length > 0 && list.every(k => catalogPending.has(k));
+  $("catAll").textContent = allSelected ? "Tout désélectionner" : "Tout sélectionner";
+  $("catAll").disabled = !list.length;
+
+  const n = catalogPending.size;
+  $("catPending").textContent = n
+    ? `${n} sélectionné${n > 1 ? "s" : ""}`
+    : "Touche des kanji, ou colle une liste dans la recherche.";
+  setHidden("catClear", !n);
+  $("catReview").disabled = $("catKnown").disabled = !n;
 
   renderCatalogDetail();
 }
@@ -99,7 +107,7 @@ function renderCatalogDetail() {
   if (!catalogSelected) return;
   const k = kanjiInfo(catalogSelected), pend = catalogPending.has(k.char);
   let state = STATE_LABEL[kanjiState(k.char)];
-  if (pend) state += isKnown(k.char) ? " · sera remis en révision" : " · sélectionné";
+  if (pend) state += " · sélectionné";
   $("cdChar").textContent = k.char;
   $("cdLevel").textContent = `N${k.level} · ${k.strokes} traits · ${state}`;
   $("cdMean").textContent = k.meanings.map(m => m.toLowerCase()).join(" · ");
@@ -124,9 +132,9 @@ function togglePending(k) {
 }
 
 function toggleAllVisible() {
-  const selectable = visibleKanji().filter(k => !isKnown(k));
-  const allSelected = selectable.every(k => catalogPending.has(k));
-  selectable.forEach(k => allSelected ? catalogPending.delete(k) : catalogPending.add(k));
+  const list = visibleKanji();
+  const allSelected = list.every(k => catalogPending.has(k));
+  list.forEach(k => allSelected ? catalogPending.delete(k) : catalogPending.add(k));
   renderCatalog();
 }
 
@@ -135,28 +143,34 @@ function clearPending() {
   renderCatalog();
 }
 
-function validatePending() {
-  const changed = [...catalogPending];
-  if (!changed.length) return;
-  const before = {};
-  let added = 0;
-  changed.forEach(k => {
-    before[k] = progress[k] ? [...progress[k]] : null;
-    if (isKnown(k)) restoreEntry(k, null);   // remis en révision tout de suite
-    else { markKnown(k); added++; }
-  });
+const kanjiCount = n => n + " kanji";
+
+// « Je les maîtrise » : sortis des révisions. Annulable (ils reviennent comme avant).
+function markPendingKnown() {
+  const changed = [...catalogPending].filter(k => !isKnown(k));
   catalogPending.clear();
+  if (!changed.length) return renderCatalog();
+  const before = {};
+  changed.forEach(k => { before[k] = markKnown(k); });
   persist();
   renderCatalog();
-
-  const removed = changed.length - added, parts = [];
-  if (added) parts.push(`${added} kanji marqué${added > 1 ? "s" : ""} comme maîtrisé${added > 1 ? "s" : ""}`);
-  if (removed) parts.push(`${removed} remis en révision`);
-  showToast(parts.join(", ") + ".", () => {
+  showToast(kanjiCount(changed.length) + " marqués comme maîtrisés.", () => {
     changed.forEach(k => restoreEntry(k, before[k]));
     persist();
     renderCatalog();
   });
+}
+
+// « À réviser » : ils arrivent dans la prochaine session, au début du cycle SRS, et comptent dans
+// l'objectif du jour. Pas d'« Annuler » : un kanji jamais vu ne peut pas redevenir « jamais vu »
+// (la synchro garde toujours une entrée).
+function addPendingToReview() {
+  const changed = [...catalogPending];
+  catalogPending.clear();
+  changed.forEach(k => { queueForReview(k); markIntroduced(k); });
+  persist();
+  renderCatalog();
+  showToast(kanjiCount(changed.length) + " ajoutés à tes révisions.", null, 3500);
 }
 
 // ---------- Ouverture / fermeture ----------
@@ -189,7 +203,8 @@ function initCatalog() {
   $("catBack").onclick = closeCatalog;
   $("catAll").onclick = toggleAllVisible;
   $("catClear").onclick = clearPending;
-  $("catValidate").onclick = validatePending;
+  $("catReview").onclick = addPendingToReview;
+  $("catKnown").onclick = markPendingKnown;
   $("cdToggle").onclick = () => catalogSelected && togglePending(catalogSelected);
   $("cdClose").onclick = () => showDetail(null);
 

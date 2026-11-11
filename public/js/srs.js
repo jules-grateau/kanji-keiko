@@ -89,12 +89,13 @@ const levelPool = () => {
 // Kanji jamais vus des niveaux choisis : les prochains à découvrir.
 const newKanji = () => levelPool().filter(k => !progress[k]);
 
-// Kanji à travailler : TOUTES les révisions échues (les plus anciennes d'abord), sans plafond pour
-// respecter le SRS, + les nouveaux qui restent pour l'objectif du jour (ou `extraNew` au-delà).
+// Kanji à travailler : TOUTES les révisions échues, de tous les niveaux (un kanji appris se révise,
+// même hors des niveaux choisis), les plus anciennes d'abord et sans plafond pour respecter le SRS,
+// + les nouveaux des niveaux choisis qui restent pour l'objectif du jour (ou `extraNew` au-delà).
 function buildQueue(extraNew = 0) {
   const now = Date.now();
-  const due = levelPool()
-    .filter(k => progress[k] && progress[k][1] <= now)
+  const due = Object.keys(progress)
+    .filter(k => KANJI_BY_CHAR[k] && progress[k][1] <= now)
     .sort((a, b) => progress[a][1] - progress[b][1]);
   const fresh = newKanji().slice(0, extraNew || goalRemaining());
   return { due, fresh };
@@ -109,6 +110,12 @@ function markKnown(k) {
   e[2]++;   // compte comme une bonne réponse (et fait gagner cette version à la synchro)
   progress[k] = e;
   return before;
+}
+
+// Ajouté à la main aux révisions (« À réviser ») : il repart du début du cycle, à revoir tout de suite.
+function queueForReview(k) {
+  const e = progress[k];
+  progress[k] = e ? [0, Date.now(), e[2] + 1, e[3]] : [0, Date.now(), 0, 0];
 }
 
 // Remet l'entrée d'un kanji dans l'état `before` (annulation d'une réponse ou d'un « Je le maîtrise »).

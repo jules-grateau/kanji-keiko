@@ -513,7 +513,8 @@ body.catalog main { padding-bottom: 12px; }
 }
 .cat-buttons { display: flex; gap: 8px; margin-left: auto; }
 .cat-buttons .primary { padding: 10px 18px; }
-.cat-buttons .ghost:disabled { opacity: .35; cursor: default; }
+.cat-buttons button:disabled { opacity: .35; cursor: default; }
+#catMissing:empty { display: none; }
 /* Le bandeau « Annuler » passe au-dessus de la barre Valider */
 body.catalog .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 
@@ -544,10 +545,8 @@ body.catalog .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 }
 .kchip.known::after { content: "✓"; }
 .kchip.learning::after { content: "•"; color: var(--indigo); font-size: 14px; }
-/* Sélectionné, pas encore validé : pointillés verts (à marquer) ou rouge barré (à retirer) */
-.kchip.pend { border: 2px dashed var(--ok); background: color-mix(in srgb, var(--ok) 10%, var(--paper)); }
-.kchip.known.pend { border-color: var(--red); color: var(--red); background: var(--paper); text-decoration: line-through; }
-.kchip.known.pend::after { content: "−"; color: var(--red); font-size: 13px; }
+/* Sélectionné, en attente d'une action (À réviser / Je les maîtrise) */
+.kchip.pend { border: 2px dashed var(--ink); background: color-mix(in srgb, var(--ink) 12%, var(--paper)); }
 .kchip.sel { outline: 2px solid var(--ink); outline-offset: 1px; }
 
 /* Détail du kanji (appui long) */
@@ -577,7 +576,7 @@ body.catalog .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
   main { max-width: 1200px; }
   #login, #end, #settings { max-width: 640px; margin-inline: auto; }
 
-  /* Accueil : série et objectif du jour à gauche ; niveaux et « Tous les kanji » à droite */
+  /* Accueil : série, objectif du jour et « Tous les kanji » à gauche ; niveaux à droite */
   #home { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; align-items: start; }
   #home .welcome { grid-column: 1 / -1; }
   .home-col { display: flex; flex-direction: column; }
