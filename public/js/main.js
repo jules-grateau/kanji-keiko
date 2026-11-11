@@ -3,6 +3,7 @@ initHome();
 initCatalog();
 initSettingsScreen();
 initSrsPage();
+initSources();
 initPad();
 initSession();
 renderHome();

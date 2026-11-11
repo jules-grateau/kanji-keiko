@@ -9,27 +9,16 @@ function kanjiInfo(char) {
   const r = KANJI_BY_CHAR[char];
   return {
     char: r[0], level: r[1], strokes: r[2], meanings: r[3], on: r[4], kun: r[5],
-    components: r[6], wkRadicals: r[7], wkLevel: r[8], phonetic: r[9], family: r[10], similar: r[11],
+    components: r[6], wkLevel: r[7], phonetic: r[8], family: r[9], similar: r[10],
   };
 }
 
-// Noms des composants qui ne sont pas eux-mêmes des kanji de la liste (formes réduites, radicaux…).
-const RADICAL_NAMES = {
-  "氵": "water", "⺅": "person", "⺾": "grass", "扌": "hand", "刂": "knife", "忄": "heart", "⻖": "hill",
-  "⻏": "village", "⺌": "small", "灬": "fire", "辶": "road", "亠": "lid", "ノ": "slash", "｜": "stick",
-  "ハ": "split", "丶": "dot", "𠆢": "roof", "冂": "frame", "冖": "cover", "宀": "roof", "厂": "cliff",
-  "广": "shelter", "尸": "flag", "夂": "slow walk", "攵": "strike", "隹": "bird", "匕": "spoon", "勹": "wrap",
-  "冫": "ice", "卩": "seal", "几": "table", "卜": "divination", "巾": "cloth", "彳": "step", "廾": "two hands",
-  "ヨ": "comb", "厶": "private", "幺": "thread", "亅": "hook", "并": "together", "罒": "net", "⺹": "old",
-  "𦥑": "hands", "⺼": "flesh", "龴": "claw", "乚": "hook", "マ": "fold", "ユ": "hook", "癶": "footsteps",
-  "耂": "old", "⺊": "divination", "⺈": "knife", "艹": "grass", "牜": "cow", "犭": "dog", "礻": "altar",
-  "衤": "clothes", "禸": "track", "疒": "sickness", "王": "king", "缶": "jar",
-};
-
-// Nom d'un composant : premier sens si c'est un kanji connu, sinon nom du radical.
+// Nom d'un composant : premier sens si c'est un kanji de la liste, sinon le nom fourni par les données
+// (COMPONENT_NAMES, data/kanji.js : nom officiel du radical dans Unicode, ou sens KANJIDIC).
+// Quelques éléments de KRADFILE (ノ, ｜, ハ…) n'ont pas de nom sourcé : on n'en invente pas.
 function componentName(c) {
   const r = KANJI_BY_CHAR[c];
-  return r ? r[3][0].toLowerCase() : (RADICAL_NAMES[c] || "");
+  return r ? r[3][0].toLowerCase() : (COMPONENT_NAMES[c] || "");
 }
 
 // Kanji élémentaire = son seul composant, c'est lui-même.

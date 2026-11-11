@@ -100,7 +100,14 @@
     <h3>Données</h3>
     <div class="row"><button class="ghost" id="export">Exporter ma progression</button><label class="ghost" style="cursor:pointer">Importer<input type="file" id="import" accept="application/json" hidden></label></div>
     <div class="row" style="margin-top:12px"><button class="link" id="reset">Réinitialiser la progression</button></div>
+    <p class="note" style="margin-top:12px"><button class="link" id="openSources">Sources et licences</button> : d’où viennent les kanji, les lectures et l’ordre des traits.</p>
   </div>
+</section>
+
+<!-- Sources et licences : rempli par js/sources.js -->
+<section id="sources" class="hide">
+  <div class="top"><button class="link" id="sourcesBack">← Retour</button><span>Sources et licences</span><span></span></div>
+  <div id="sourcesBody"></div>
 </section>
 
 <!-- Comment marche la révision : rempli par js/srs-page.js à partir des règles de js/srs.js -->
@@ -178,7 +185,6 @@
       <div class="steps" id="steps"></div>
       <details id="explain"><summary>Décortiquer ce kanji</summary>
         <div class="comps" id="comps"></div>
-        <div class="note" id="wk"></div>
         <p class="similar" id="similar"></p>
         <p class="note" style="margin-top:12px">Astuces écrites par des humains :</p>
         <div class="links" id="links"></div>
@@ -186,6 +192,8 @@
         <textarea id="note" rows="2" placeholder="Écris ici ce qui marche pour toi…"></textarea>
       </details>
     </div>
+    <!-- D'où viennent les données de cette carte (js/sources.js) -->
+    <p class="card-sources" id="cardSources"></p>
   </div>
 </section>
 
@@ -216,6 +224,7 @@
 <script src="js/goal.js"></script>
 <script src="js/settings-screen.js"></script>
 <script src="js/srs-page.js"></script>
+<script src="js/sources.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/home.js"></script>
 <script src="js/catalog.js"></script>

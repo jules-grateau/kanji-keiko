@@ -4,8 +4,8 @@ let session = null;
 // Écart avant qu'un kanji raté revienne : REDO_GAP puis RELEARN_GAP cartes (constantes dans srs.js).
 
 function showScreen(id) {
-  ["login", "home", "settings", "srsInfo", "catalog", "session", "end"].forEach(x => $(x).classList.toggle("hide", x !== id));
-  document.body.classList.toggle("focus", ["session", "catalog", "settings", "srsInfo"].includes(id));   // on masque le titre pour gagner de la place
+  ["login", "home", "settings", "srsInfo", "sources", "catalog", "session", "end"].forEach(x => $(x).classList.toggle("hide", x !== id));
+  document.body.classList.toggle("focus", ["session", "catalog", "settings", "srsInfo", "sources"].includes(id));   // on masque le titre pour gagner de la place
   document.body.classList.toggle("on-home", id === "home");    // bouton ⚙ Réglages dans l'en-tête
   document.body.classList.toggle("catalog", id === "catalog");   // écran à hauteur fixe (voir style.css)
 }
@@ -49,6 +49,7 @@ function nextCard() {
     .concat(k.kun.map(x => `<span class="pill kun"><em>訓</em>${esc(formatKun(x))}</span>`))
     .join("");
   setHidden("readings", settings.hard);   // mode difficile : sens seul
+  renderCardSources(k.char, false);
 
   setHidden("result", true);
   setHidden("checkrow", false);
@@ -75,6 +76,7 @@ function reveal() {
   renderStrokes(char);
   showAnswerOverlay(char);
   renderExplanation(char);
+  renderCardSources(char, true);
 
   setHidden("grade", false);
   $("verdict").textContent = "Compare avec ton tracé, puis juge-toi honnêtement.";
@@ -200,16 +202,13 @@ function next() {
   nextCard();
 }
 
-// Section « Décortiquer ce kanji » : composants, radicaux WaniKani, kanji à ne pas confondre,
+// Section « Décortiquer ce kanji » : composants, kanji à ne pas confondre,
 // liens vers des astuces écrites par des humains, et note perso.
 function renderExplanation(char) {
   const k = kanjiInfo(char);
   $("comps").innerHTML = isElementary(k)
     ? '<span class="note">Kanji élémentaire : il ne se décompose pas, c’est lui-même un composant.</span>'
     : k.components.map(c => `<div class="comp"><b>${esc(c)}</b><span>${esc(componentName(c) || "—")}</span></div>`).join("");
-  $("wk").textContent = k.wkRadicals.length
-    ? "Radicaux WaniKani : " + k.wkRadicals.join(", ") + (k.wkLevel ? " · niveau WK " + k.wkLevel : "")
-    : "";
   const similar = similarText(k);
   $("similar").textContent = similar ? "Ne pas confondre avec " + similar + "." : "";
   setHidden("similar", !similar);
