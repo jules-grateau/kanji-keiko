@@ -4,6 +4,8 @@
 //   srs:   { kanji: [boîte, prochaineRévision, nbJustes, nbRatés] },
 //   notes: { kanji: texte },
 //   days:  ["AAAA-MM-JJ", …]   jours d’entraînement, pour la série (voir public/js/streak.js)
+//   intro: { "AAAA-MM-JJ": [kanji, …] }   kanji découverts chaque jour, pour l'objectif (public/js/goal.js)
+//   settings: { lv: [niveaux], goal, hard, t }   réglages du compte ; t = date du changement, le plus récent gagne
 //   t:     dernière mise à jour
 // }
 const fs = require("fs");
@@ -15,6 +17,8 @@ const MAX_NOTE_LENGTH = 2000;
 const MAX_ENTRIES = 3000;      // un peu plus que le nombre de kanji : évite qu'un compte remplisse le disque
 const MAX_DAYS = 5000;         // ~13 ans d'entraînement quotidien
 const DAY_FORMAT = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_INTRO_DAYS = 14;     // seul « aujourd'hui » sert à l'objectif
+const MAX_INTRO_PER_DAY = 500;
 
 fs.mkdirSync(USERS_DIR, { recursive: true });
 
@@ -28,7 +32,7 @@ function fileOf(userId) {
 
 function getState(userId) {
   if (cache.has(userId)) return cache.get(userId);
-  let state = { srs: {}, notes: {}, days: [], t: 0 };
+  let state = { srs: {}, notes: {}, days: [], intro: {}, settings: null, t: 0 };
   try {
     state = Object.assign(state, JSON.parse(fs.readFileSync(fileOf(userId), "utf8")));
   } catch (e) {
@@ -47,6 +51,11 @@ function save(userId, state) {
 
 const isValidEntry = e => Array.isArray(e) && e.length === 4 && e.every(Number.isFinite);
 
+const isValidSettings = s => !!s && typeof s === "object"
+  && Array.isArray(s.lv) && s.lv.length <= 5 && s.lv.every(n => Number.isInteger(n) && n >= 1 && n <= 5)
+  && Number.isInteger(s.goal) && s.goal >= 1 && s.goal <= 100
+  && typeof s.hard === "boolean" && Number.isFinite(s.t);
+
 // Garde l'entrée qui a le plus de révisions (à égalité, la prochaine révision la plus tardive).
 // Même règle que côté navigateur (public/js/srs.js).
 function isNewer(incoming, current) {
@@ -58,7 +67,7 @@ function isNewer(incoming, current) {
 // Fusionne l'état envoyé par un appareil dans celui de l'utilisateur, puis sauvegarde.
 function merge(userId, incoming) {
   const state = getState(userId);
-  if (incoming.reset) state.srs = {};
+  if (incoming.reset) { state.srs = {}; state.intro = {}; }
 
   for (const k of Object.keys(incoming.srs || {})) {
     const entry = incoming.srs[k];
@@ -80,6 +89,23 @@ function merge(userId, incoming) {
   if (Array.isArray(incoming.days)) {
     const valid = incoming.days.filter(d => typeof d === "string" && DAY_FORMAT.test(d));
     state.days = [...new Set([...state.days, ...valid])].sort().slice(-MAX_DAYS);
+  }
+
+  // Kanji découverts par jour : union des listes, seuls les derniers jours sont gardés.
+  if (incoming.intro && typeof incoming.intro === "object") {
+    for (const d of Object.keys(incoming.intro)) {
+      const list = incoming.intro[d];
+      if (!DAY_FORMAT.test(d) || !Array.isArray(list)) continue;
+      const valid = list.filter(k => typeof k === "string" && k.length > 0 && k.length <= MAX_KEY_LENGTH);
+      state.intro[d] = [...new Set([...(state.intro[d] || []), ...valid])].slice(0, MAX_INTRO_PER_DAY);
+    }
+    for (const d of Object.keys(state.intro).sort().slice(0, -MAX_INTRO_DAYS)) delete state.intro[d];
+  }
+
+  // Réglages : on garde les plus récents.
+  const s = incoming.settings;
+  if (isValidSettings(s) && (!state.settings || s.t > state.settings.t)) {
+    state.settings = { lv: [...new Set(s.lv)], goal: s.goal, hard: s.hard, t: s.t };
   }
 
   state.t = Date.now();

@@ -1,4 +1,4 @@
-// Écran d'accueil : choix des niveaux, réglages et compteurs du jour.
+// Écran d'accueil : série, objectif du jour, choix des niveaux. (Réglages : js/settings-screen.js)
 
 function renderHome() {
   renderStreak();
@@ -16,31 +16,49 @@ function renderHome() {
 
   // Clic sur un niveau : on l'ajoute ou on le retire de la sélection.
   document.querySelectorAll(".lv").forEach(btn => btn.onclick = () => {
-    const n = +btn.dataset.n, i = settings.lv.indexOf(n);
-    if (i >= 0) settings.lv.splice(i, 1); else settings.lv.push(n);
-    saveSettings();
+    const n = +btn.dataset.n;
+    changeSettings(s => {
+      const i = s.lv.indexOf(n);
+      if (i >= 0) s.lv.splice(i, 1); else s.lv.push(n);
+    });
     renderHome();
   });
 
-  $("newn").value = String(settings.n);
-  $("hard").checked = settings.hard;
+  renderToday(stats);
+}
 
-  const q = buildQueue();
+// Panneau « Objectif du jour » : progression, compteurs et bouton pour lancer la session.
+function renderToday(stats) {
+  const g = goalInfo(), q = buildQueue();
+  $("goalText").textContent = g.reached
+    ? `${g.done} / ${g.goal} ✓ atteint !`
+    : `${g.done} / ${g.goal} nouveaux`;
+  $("goalBar").style.width = Math.min(100, g.done / g.goal * 100) + "%";
+  $("goalBar").classList.toggle("m", g.reached);   // vert une fois atteint
+
   $("sDue").textContent = q.due.length;
   $("sNew").textContent = q.fresh.length;
   $("sMast").textContent = Object.values(stats).reduce((sum, o) => sum + o.mastered, 0);
-  $("start").disabled = !(q.due.length + q.fresh.length);
+
+  // Objectif atteint : « Réviser » s'il reste des révisions, et la possibilité d'en apprendre plus.
+  const start = $("start");
+  if (g.reached) start.textContent = q.due.length ? `Réviser (${q.due.length})` : "Rien à réviser";
+  else start.textContent = g.done ? "Continuer" : "Commencer";
+  start.disabled = !(q.due.length + q.fresh.length);
+  setHidden("start", g.reached && !q.due.length);
+  setHidden("extra", !g.reached);
+  $("extra").disabled = !newKanji().length;
 }
 
 function initHome() {
-  $("newn").onchange = e => { settings.n = +e.target.value; saveSettings(); renderHome(); };
-  $("hard").onchange = e => { settings.hard = e.target.checked; saveSettings(); };
-
   $("reset").onclick = () => {
     if (!confirm("Effacer toute ta progression (sur le serveur aussi) ?")) return;
     progress = {};
+    introDays = {};
     saveProgress();
+    saveIntro();
     renderHome();
-    if (canSync()) push({ reset: true, srs: {}, notes, days: activeDays });
+    if (draft) renderSettingsScreen();   // l'aperçu de l'objectif change
+    if (canSync()) push({ reset: true, srs: {}, notes, days: activeDays, intro: {}, settings });
   };
 }

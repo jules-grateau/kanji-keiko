@@ -4,15 +4,18 @@ let session = null;
 const REDO_GAP = 4;   // un kanji raté revient après au plus 4 autres cartes
 
 function showScreen(id) {
-  ["login", "home", "catalog", "session", "end"].forEach(x => $(x).classList.toggle("hide", x !== id));
-  document.body.classList.toggle("focus", id === "session" || id === "catalog");   // on masque le titre pour gagner de la place
+  ["login", "home", "settings", "catalog", "session", "end"].forEach(x => $(x).classList.toggle("hide", x !== id));
+  document.body.classList.toggle("focus", ["session", "catalog", "settings"].includes(id));   // on masque le titre pour gagner de la place
+  document.body.classList.toggle("on-home", id === "home");    // bouton ⚙ Réglages dans l'en-tête
   document.body.classList.toggle("catalog", id === "catalog");   // écran à hauteur fixe (voir style.css)
 }
 
-function startSession() {
-  const q = buildQueue();
+// extraNew : nombre de nouveaux kanji en plus de l'objectif (bouton « + 5 nouveaux en plus »).
+function startSession(extraNew = 0) {
+  const q = buildQueue(extraNew);
   session = {
     queue: q.due.concat(q.fresh),
+    fresh: new Set(q.fresh),   // nouveaux kanji de la session : leur première réponse compte pour l'objectif
     current: null,     // kanji affiché
     judged: false,     // réponse déjà jugée ?
     redo: null,        // kanji raté à réinsérer dans la file
@@ -119,6 +122,7 @@ function judge(ok) {
 
   const days = recordAnswer(char, ok);
   if (markActiveToday()) session.streakExtended = true;
+  if (session.fresh.has(char)) markIntroduced(char);
   if (ok) {
     session.ok++;
   } else {
@@ -154,6 +158,11 @@ function judgeCorrect() {
 function markCurrentKnown() {
   const char = session.current;
   remember(char);
+  // Nouveau kanji pas encore répondu : il ne compte pas pour l'objectif, un autre prend sa place.
+  if (session.fresh.has(char) && !introducedToday().includes(char)) {
+    const replacement = newKanji().find(k => k !== char && !session.fresh.has(k));
+    if (replacement) { session.queue.push(replacement); session.fresh.add(replacement); }
+  }
   markKnown(char);
   if (session.redo === char) session.redo = null;
   session.missed = session.missed.filter(k => k !== char);
@@ -197,6 +206,10 @@ function finishSession() {
   $("eOk").textContent = session.ok;
   $("eKo").textContent = session.ko;
   $("eAll").textContent = session.seen.size;
+  const g = goalInfo();
+  $("eGoal").textContent = g.reached
+    ? `🎯 Objectif du jour atteint : ${g.done} / ${g.goal} ✓`
+    : `🎯 ${g.done} / ${g.goal} nouveaux aujourd’hui`;
   const { count } = streakInfo();
   $("eStreak").textContent = count
     ? "🔥 " + (session.streakExtended ? "Série prolongée : " : "Série : ") + plural(count)
@@ -210,7 +223,8 @@ function finishSession() {
 }
 
 function initSession() {
-  $("start").onclick = startSession;
+  $("start").onclick = () => startSession();
+  $("extra").onclick = () => startSession(EXTRA_STEP);
   $("quit").onclick = finishSession;
   $("again").onclick = () => { showScreen("home"); renderHome(); };
 

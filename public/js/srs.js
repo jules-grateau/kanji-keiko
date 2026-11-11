@@ -11,8 +11,10 @@
 const INTERVAL_DAYS = [0, 1, 2, 4, 8, 16, 32, 64];
 const DAY_MS = 864e5;
 const MASTERED_BOX = 4;   // à partir de cette boîte, le kanji compte comme « maîtrisé »
-const MAX_DUE = 40;       // nombre max de révisions par session
 const LEVELS = [5, 4, 3, 2, 1];
+const GOAL_MIN = 1, GOAL_MAX = 100;         // objectif : nouveaux kanji par jour
+const GOAL_PRESETS = [5, 10, 15, 20, 30];   // raccourcis de l'écran Réglages
+const isValidGoal = g => Number.isInteger(g) && g >= GOAL_MIN && g <= GOAL_MAX;
 const KNOWN_BOX = 99;                // « Je le maîtrise » : sorti des révisions
 const KNOWN_DUE = Date.UTC(2100, 0, 1);  // date de révision qui n'arrive jamais
 
@@ -21,13 +23,33 @@ const KEY_PROGRESS = "kanji-srs-v1";
 const KEY_SETTINGS = "kanji-set-v1";
 const KEY_NOTES = "kanji-notes-v1";
 
-let progress = load(KEY_PROGRESS, {});                                     // kanji → entrée SRS
-let settings = load(KEY_SETTINGS, { lv: [3, 2], n: 10, hard: false });     // niveaux choisis, nouveaux/session, mode difficile
-let notes = load(KEY_NOTES, {});                                           // kanji → note perso
+// Réglages : niveaux choisis, objectif de nouveaux kanji par jour, mode difficile.
+// Ils suivent le compte (synchro) : `t` = date du dernier changement, le plus récent gagne.
+function normalizeSettings(s) {
+  if (!s) return { lv: [3, 2], goal: 10, hard: false, t: 0 };   // valeurs par défaut : le serveur l'emporte
+  return {
+    lv: Array.isArray(s.lv) ? s.lv.filter(n => LEVELS.includes(n)) : [3, 2],
+    goal: isValidGoal(s.goal) ? s.goal : isValidGoal(s.n) ? s.n : 10,   // n : ancien « par session »
+    hard: !!s.hard,
+    t: Number.isFinite(s.t) ? s.t : 1,   // ancien réglage local sans date : préféré aux valeurs par défaut
+  };
+}
+
+let progress = load(KEY_PROGRESS, {});                       // kanji → entrée SRS
+let settings = normalizeSettings(load(KEY_SETTINGS, null));
+let notes = load(KEY_NOTES, {});                             // kanji → note perso
 
 const saveProgress = () => save(KEY_PROGRESS, progress);
 const saveSettings = () => save(KEY_SETTINGS, settings);
 const saveNotes = () => save(KEY_NOTES, notes);
+
+// Modifie les réglages, les date, les enregistre et les envoie au serveur.
+function changeSettings(update) {
+  update(settings);
+  settings.t = Date.now();
+  saveSettings();
+  persist();
+}
 
 // Entre deux entrées pour un même kanji, garde celle qui a le plus de révisions
 // (à égalité, celle dont la prochaine révision est la plus tardive). Même règle côté serveur.
@@ -58,15 +80,23 @@ function levelStats() {
   return out;
 }
 
-// Kanji à travailler : révisions échues (les plus anciennes d'abord) + nouveaux jamais vus.
-function buildQueue() {
-  const now = Date.now(), levels = new Set(settings.lv);
-  const pool = KANJI.filter(r => levels.has(r[1])).map(r => r[0]);
-  const due = pool
+// Kanji des niveaux choisis, dans l'ordre de la liste.
+const levelPool = () => {
+  const levels = new Set(settings.lv);
+  return KANJI.filter(r => levels.has(r[1])).map(r => r[0]);
+};
+
+// Kanji jamais vus des niveaux choisis : les prochains à découvrir.
+const newKanji = () => levelPool().filter(k => !progress[k]);
+
+// Kanji à travailler : TOUTES les révisions échues (les plus anciennes d'abord), sans plafond pour
+// respecter le SRS, + les nouveaux qui restent pour l'objectif du jour (ou `extraNew` au-delà).
+function buildQueue(extraNew = 0) {
+  const now = Date.now();
+  const due = levelPool()
     .filter(k => progress[k] && progress[k][1] <= now)
-    .sort((a, b) => progress[a][1] - progress[b][1])
-    .slice(0, MAX_DUE);
-  const fresh = pool.filter(k => !progress[k]).slice(0, settings.n);
+    .sort((a, b) => progress[a][1] - progress[b][1]);
+  const fresh = newKanji().slice(0, extraNew || goalRemaining());
   return { due, fresh };
 }
 

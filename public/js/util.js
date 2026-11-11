@@ -27,10 +27,11 @@ function save(key, value) {
 const toKatakana = s => s.replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 96));
 const formatKun = s => s.replace(/^-/, "〜").replace(/-$/, "〜").replace(/\.(.*)$/, "（$1）");
 
-// Bandeau en bas d'écran avec un bouton Annuler, qui disparaît après quelques secondes.
+// Bandeau en bas d'écran, qui disparaît après quelques secondes. Avec `onUndo` : bouton Annuler.
 let toastTimer = null;
 function showToast(text, onUndo, duration = 6000) {
   $("toastText").textContent = text;
+  setHidden("toastUndo", !onUndo);
   $("toastUndo").onclick = () => { hideToast(); onUndo(); };
   setHidden("toast", false);
   clearTimeout(toastTimer);

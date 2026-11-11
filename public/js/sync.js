@@ -32,6 +32,13 @@ function mergeFromServer(remote) {
   mergeProgress(remote.srs);
   mergeDays(remote.days);
   saveDays();
+  mergeIntro(remote.intro);
+  saveIntro();
+  // Réglages : ceux du serveur gagnent, sauf si on vient de les changer ici (date plus récente).
+  if (remote.settings && remote.settings.t >= settings.t) {
+    settings = normalizeSettings(remote.settings);
+    saveSettings();
+  }
   for (const k in remote.notes || {}) {
     if (!(k in dirtyNotes)) notes[k] = remote.notes[k];
   }
@@ -45,7 +52,7 @@ async function push(body) {
     const res = await fetch("api/state", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body || { srs: progress, notes, days: activeDays }),
+      body: JSON.stringify(body || { srs: progress, notes, days: activeDays, intro: introDays, settings }),
     });
     if (res.status === 401) { showSignedOut("Ta session a expiré. Reconnecte-toi pour continuer, rien n’est perdu."); return; }
     if (!res.ok) throw new Error(res.status);
@@ -73,10 +80,14 @@ function clearLocalData() {
   progress = {};
   notes = {};
   activeDays = [];
+  introDays = {};
+  settings = normalizeSettings(null);   // les réglages du compte reviendront du serveur
   dirtyNotes = {};
   saveProgress();
   saveNotes();
   saveDays();
+  saveIntro();
+  saveSettings();
   renderHome();
 }
 
