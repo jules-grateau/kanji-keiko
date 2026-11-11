@@ -10,7 +10,11 @@ let syncTimer = null;
 let dirtyNotes = {};    // notes modifiées localement depuis le dernier envoi : le serveur ne doit pas les écraser
 
 const canSync = () => !!account;
-const setSyncMessage = m => { $("syncnote").textContent = m; };
+// Message de synchro (menu du compte) ; `ok` = enregistré sur le serveur (point vert sur l'avatar).
+function setSyncMessage(m, ok = true) {
+  $("syncnote").textContent = m;
+  setSyncState(ok ? "ok" : "error");
+}
 // Message sous le bouton de connexion : "info" (indication) ou "error" (problème). Vide = masqué.
 function setLoginMessage(text, kind = "info") {
   const el = $("loginnote");
@@ -62,7 +66,7 @@ async function push(body) {
     const time = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
     setSyncMessage("Synchronisé à " + time + ".");
   } catch (e) {
-    setSyncMessage("Serveur injoignable : tes données restent sur cet appareil et partiront au prochain essai.");
+    setSyncMessage("Serveur injoignable : tes données restent sur cet appareil et partiront au prochain essai.", false);
   }
 }
 
@@ -98,7 +102,7 @@ function showSignedIn(user) {
   if (owner && owner !== user.email) clearLocalData();
   save(KEY_ACCOUNT, user.email);
 
-  $("who").textContent = "Connecté : " + user.email;
+  renderAccount(user);
   renderHome();
   showScreen("home");
   push();

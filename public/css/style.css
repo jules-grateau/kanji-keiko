@@ -642,10 +642,45 @@ body.catalog .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 .start-btns { display: flex; gap: 8px; flex-wrap: wrap; }
 .start-btns .ghost:disabled { opacity: .35; cursor: default; }
 
-/* Bouton ⚙ Réglages, en haut à droite, seulement sur l'accueil */
+/* Menu du compte, en haut à droite, seulement sur l'accueil (js/account.js) */
 header { position: relative; }
-.settings-btn { position: absolute; top: 8px; right: 0; padding: 6px 12px; }
-body:not(.on-home) .settings-btn { display: none; }
+.account { position: absolute; top: 6px; right: 0; z-index: 5; }
+body:not(.on-home) .account { display: none; }
+.account-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 12px 5px 5px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--card); font-size: 14px;
+}
+.account-btn:hover { border-color: var(--ink); }
+.avatar {
+  position: relative; width: 30px; height: 30px; border-radius: 50%; flex: none;
+  display: inline-grid; place-items: center;
+  background: var(--red); color: var(--card); font-weight: 700; font-size: 14px;
+}
+/* Point de synchro sur l'avatar du bouton : vert = enregistré, orange = en attente */
+.avatar.sync-ok::after, .avatar.sync-error::after {
+  content: ""; position: absolute; right: -1px; bottom: -1px;
+  width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--card);
+}
+.avatar.sync-ok::after { background: var(--ok); }
+.avatar.sync-error::after { background: var(--ochre); }
+.account-menu {
+  position: absolute; top: calc(100% + 8px); right: 0; width: 260px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, .35); font-size: 14px;
+}
+.account-who { display: flex; gap: 10px; align-items: center; }
+.account-who small { display: block; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.account-sync { display: block; color: var(--muted); font-size: 12px; margin-top: 8px; }
+.account-sync:empty { display: none; }
+.account-menu hr { border: 0; border-top: 1px solid var(--line); margin: 10px 0; }
+.account-menu button[role=menuitem] {
+  display: block; width: 100%; text-align: left; padding: 6px 4px;
+  background: none; border: 0; border-radius: 6px; font-size: 14px;
+}
+.account-menu button[role=menuitem]:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.account-menu .danger { color: var(--red); }
+@media (max-width: 600px) { .account-name { display: none; } .account-btn { padding: 3px 8px 3px 3px; } }
 
 /* ============================================================
    Réglages

@@ -10,8 +10,25 @@
 <body>
 <main>
 <header>
-  <!-- Visible seulement sur l'accueil (classe on-home, voir showScreen) -->
-  <button class="ghost settings-btn" id="openSettings">⚙ Réglages</button>
+  <!-- Menu du compte, visible seulement sur l'accueil (classe on-home, voir showScreen) ; js/account.js -->
+  <div class="account" id="account">
+    <button class="account-btn" id="accountBtn" aria-haspopup="true" aria-expanded="false" aria-controls="accountMenu">
+      <span class="avatar" id="accountAvatar"></span><span class="account-name" id="accountName"></span> ▾
+    </button>
+    <div class="account-menu hide" id="accountMenu" role="menu">
+      <div class="account-who">
+        <span class="avatar" id="accountAvatar2"></span>
+        <div><b id="accountName2"></b><small id="who"></small></div>
+      </div>
+      <small class="account-sync" id="syncnote"></small>
+      <hr>
+      <button role="menuitem" id="openSettings">⚙ Réglages</button>
+      <button role="menuitem" id="menuSources">📜 Sources et licences</button>
+      <button role="menuitem" data-srs-help>❓ Comment marche la révision</button>
+      <hr>
+      <button role="menuitem" class="danger" id="logout">Se déconnecter</button>
+    </div>
+  </div>
   <h1 class="jp">漢字<span>稽古</span></h1>
   <p class="sub">Écris le kanji à partir du sens et des lectures. Ce que tu rates revient plus vite, avec ses composants et une astuce pour le retenir.</p>
 </header>
@@ -91,11 +108,6 @@
     <div class="ask-btns"><button class="primary" id="leaveSave">Sauvegarder</button><button class="ghost" id="leaveDiscard">Ne pas sauvegarder</button></div>
     <button class="link" id="leaveStay">Rester</button>
   </dialog>
-  <div class="panel">
-    <h3>Compte</h3>
-    <div class="row"><span class="note" id="who"></span><button class="link" id="logout">Se déconnecter</button></div>
-    <p class="note" id="syncnote"></p>
-  </div>
   <div class="panel">
     <h3>Données</h3>
     <div class="row"><button class="ghost" id="export">Exporter ma progression</button><label class="ghost" style="cursor:pointer">Importer<input type="file" id="import" accept="application/json" hidden></label></div>
@@ -225,6 +237,7 @@
 <script src="js/settings-screen.js"></script>
 <script src="js/srs-page.js"></script>
 <script src="js/sources.js"></script>
+<script src="js/account.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/home.js"></script>
 <script src="js/catalog.js"></script>

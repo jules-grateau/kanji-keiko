@@ -4,6 +4,7 @@ initCatalog();
 initSettingsScreen();
 initSrsPage();
 initSources();
+initAccount();
 initPad();
 initSession();
 renderHome();
