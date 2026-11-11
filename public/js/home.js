@@ -1,30 +1,31 @@
-// Écran d'accueil : série, objectif du jour, choix des niveaux. (Réglages : js/settings-screen.js)
+// Écran d'accueil : série, objectif du jour, progression par niveau. (Réglages : js/settings-screen.js)
 
 function renderHome() {
   renderStreak();
   renderCatalogEntry();
   const stats = levelStats();
+  renderProgress(stats);
+  renderToday(stats);
+}
+
+// Panneau « Ma progression » : un simple aperçu, rien à cliquer. Les nouveaux kanji viennent du niveau
+// « en cours » (N5 → N1) ; les niveaux exclus dans les Réglages sont grisés.
+function renderProgress(stats) {
+  const current = currentLevel();
+  const seen = LEVELS.reduce((sum, n) => sum + stats[n].seen, 0);
+  $("progressTotal").textContent = `${seen} / ${KANJI.length} vus`;
 
   $("levels").innerHTML = LEVELS.map(n => {
-    const o = stats[n], selected = settings.lv.includes(n);
-    return `<button class="lv" data-n="${n}" aria-pressed="${selected}"><b>N${n}</b><div>`
-      + `<small>${o.total} kanji · ${o.seen} vus · ${o.mastered} maîtrisés · ${o.due} à réviser</small>`
+    const o = stats[n], skipped = settings.skip.includes(n);
+    const tag = skipped ? '<em class="lv-tag">exclu</em>'
+      : n === current ? '<em class="lv-tag now">← en cours</em>'
+      : o.seen === o.total ? '<em class="lv-tag done">✓</em>' : "";
+    return `<div class="lv${skipped ? " skip" : ""}"><b>N${n}</b><div>`
+      + `<small>${o.seen} / ${o.total} vus · ${o.mastered} maîtrisés${o.due ? " · " + o.due + " à réviser" : ""} ${tag}</small>`
       + `<div class="bar"><i style="width:${o.seen / o.total * 100}%"></i></div>`
       + `<div class="bar"><i class="m" style="width:${o.mastered / o.total * 100}%"></i></div>`
-      + `</div></button>`;
+      + `</div></div>`;
   }).join("");
-
-  // Clic sur un niveau : on l'ajoute ou on le retire de la sélection.
-  document.querySelectorAll(".lv").forEach(btn => btn.onclick = () => {
-    const n = +btn.dataset.n;
-    changeSettings(s => {
-      const i = s.lv.indexOf(n);
-      if (i >= 0) s.lv.splice(i, 1); else s.lv.push(n);
-    });
-    renderHome();
-  });
-
-  renderToday(stats);
 }
 
 // Panneau « Objectif du jour » : progression, compteurs et bouton pour lancer la session.

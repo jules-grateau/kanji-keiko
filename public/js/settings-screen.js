@@ -1,10 +1,12 @@
-// Écran « Réglages » : objectif quotidien (avec aperçu), mode difficile, compte et données.
+// Écran « Réglages » : objectif quotidien (avec aperçu), niveaux exclus, mode difficile, compte et données.
 // Les changements restent un brouillon jusqu'à « Sauvegarder ».
 // (Le compte, l'export/import et la réinitialisation sont branchés dans sync.js et home.js.)
 
-let draft = null;   // { goal, hard } en cours de modification
+let draft = null;   // { goal, hard, skip } en cours de modification
 
-const isDraftDirty = () => !!draft && (draft.goal !== settings.goal || draft.hard !== settings.hard);
+const sameLevels = (a, b) => [...a].sort().join() === [...b].sort().join();
+const isDraftDirty = () => !!draft
+  && (draft.goal !== settings.goal || draft.hard !== settings.hard || !sameLevels(draft.skip, settings.skip));
 
 // "8 jours", "~5 sem.", "~6 mois", "~2 ans"
 function durationText(days) {
@@ -31,15 +33,17 @@ function renderSettingsScreen() {
   document.querySelectorAll("#goalPresets button").forEach(b =>
     b.setAttribute("aria-pressed", +b.dataset.g === draft.goal));
   $("setHard").checked = draft.hard;
+  document.querySelectorAll("#setLevels input").forEach(c => { c.checked = !draft.skip.includes(+c.value); });
   $("saveSettings").disabled = !isDraftDirty();
 
   // Aperçu : quand aura-t-on vu chaque niveau à ce rythme ?
-  const p = goalPreview(draft.goal);
+  const p = goalPreview(draft.goal, draft.skip);
   $("goalPreview").innerHTML = p.levels.map(l => {
-    const when = !l.left ? "✓ déjà tout vu" : l.selected ? finishText(l) : "pas sélectionné";
+    const when = !l.left ? "✓ déjà tout vu" : l.selected ? finishText(l) : "exclu";
     return `<div class="pv-row${l.selected ? "" : " off"}"><b>N${l.n}</b><span>${l.left} à découvrir</span><span>${esc(when)}</span></div>`;
   }).join("");
-  const mine = settings.lv.slice().sort((a, b) => b - a).map(n => "N" + n).join(" + ");
+  const active = activeLevels(draft.skip);
+  const mine = active.length === LEVELS.length ? "N5 → N1" : active.map(n => "N" + n).join(" + ");
   $("goalTotals").innerHTML =
     (mine ? `<div>Tes niveaux (${esc(mine)}) : <b>${esc(p.mine.days ? durationText(p.mine.days) : "tout vu")}</b></div>` : "")
     + `<div>Tout le JLPT : <b>${esc(p.all.days ? durationText(p.all.days) : "tout vu")}</b></div>`;
@@ -51,7 +55,7 @@ function setDraftGoal(g) {
 }
 
 function openSettings() {
-  draft = { goal: settings.goal, hard: settings.hard };
+  draft = { goal: settings.goal, hard: settings.hard, skip: [...settings.skip] };
   showScreen("settings");
   renderSettingsScreen();
   window.scrollTo(0, 0);
@@ -71,7 +75,7 @@ function leaveSettings() {
 }
 
 function saveSettingsScreen() {
-  changeSettings(s => { s.goal = draft.goal; s.hard = draft.hard; });
+  changeSettings(s => { s.goal = draft.goal; s.hard = draft.hard; s.skip = [...draft.skip]; });
   renderSettingsScreen();
   showToast("Réglages enregistrés.", null, 2500);
 }
@@ -88,4 +92,10 @@ function initSettingsScreen() {
   $("goalPresets").innerHTML = GOAL_PRESETS.map(g => `<button data-g="${g}">${g}</button>`).join("");
   $("goalPresets").onclick = e => { const b = e.target.closest("button"); if (b) setDraftGoal(+b.dataset.g); };
   $("setHard").onchange = e => { draft.hard = e.target.checked; renderSettingsScreen(); };
+  $("setLevels").innerHTML = LEVELS.map(n => `<label class="chk"><input type="checkbox" value="${n}"> N${n}</label>`).join("");
+  $("setLevels").onchange = e => {
+    const n = +e.target.value;
+    draft.skip = e.target.checked ? draft.skip.filter(x => x !== n) : [...draft.skip, n];
+    renderSettingsScreen();
+  };
 }

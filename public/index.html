@@ -33,8 +33,9 @@
     <p><b>👋 Tu connais déjà des kanji ?</b><br>Marque-les pour ne pas les revoir en session.</p>
     <div class="row"><button class="primary" id="welcomeGo">Marquer ceux que je connais</button><button class="link" id="welcomeLater">Plus tard</button></div>
   </div>
-  <!-- Deux colonnes sur grand écran ; sur mobile, les panneaux s'enchaînent dans l'ordre du HTML -->
-  <div class="home-col">
+  <!-- Série et objectif du jour sur la même ligne (mobile comme PC).
+       Grand écran : à gauche cette ligne puis « Tous les kanji », à droite « Ma progression » (même hauteur). -->
+  <div class="home-top">
   <div class="panel streak" id="streak">
     <span class="flame" aria-hidden="true">🔥</span>
     <div class="streak-main"><b id="streakCount">0</b> <span id="streakUnit">jour de suite</span><small id="streakHint"></small></div>
@@ -46,18 +47,16 @@
     <p class="note today-stats"><b id="sDue">0</b> à réviser · <b id="sNew">0</b> nouveaux restants · <b id="sMast">0</b> maîtrisés</p>
     <div class="start-btns"><button class="primary" id="start">Commencer</button><button class="ghost hide" id="extra">+ 5 nouveaux en plus</button></div>
   </div>
+  </div>
   <!-- Accès à l'écran « Tous les kanji » -->
-  <div class="panel">
+  <div class="panel home-cat">
     <h3>Tous les kanji</h3>
     <p class="note">Ajoute à tes révisions les kanji de ton cours, ou marque ceux que tu connais déjà.</p>
     <div class="row"><span class="note"><b id="knownCount">0</b> marqués « Je le maîtrise »</span><button class="ghost" id="openCatalog">Voir tous les kanji</button></div>
   </div>
-  </div>
-  <div class="home-col">
-  <div class="panel">
-    <h3>Niveaux à travailler</h3>
+  <div class="panel home-progress">
+    <div class="today-head"><h3>Ma progression</h3><b id="progressTotal"></b></div>
     <div id="levels"></div>
-  </div>
   </div>
 </section>
 
@@ -74,6 +73,9 @@
       <span class="note">nouveaux kanji par jour</span>
     </div>
     <div class="goal-presets" id="goalPresets"></div>
+    <p class="set-label">Niveaux</p>
+    <p class="note">Les nouveaux kanji viennent de N5, puis N4… jusqu’à N1. Décoche un niveau pour le sauter (ses kanji déjà vus restent révisés).</p>
+    <div class="set-levels" id="setLevels"></div>
     <div class="preview">
       <p class="note">À ce rythme, tu auras vu :</p>
       <div id="goalPreview"></div>

@@ -157,12 +157,13 @@ textarea { width: 100%; resize: vertical; }
   padding: 10px 12px;
   margin-bottom: 8px;
 }
-.lv[aria-pressed="true"] {
-  border-color: var(--red);
-  background: color-mix(in srgb, var(--red) 7%, transparent);
-}
 .lv b { font-family: "Shippori Mincho", serif; font-size: 20px; }
 .lv small { display: block; color: var(--muted); font-size: 12.5px; }
+.lv.skip { opacity: .45; }   /* niveau exclu dans les Réglages */
+.lv-tag { font-style: normal; font-weight: 700; margin-left: 4px; }
+.lv-tag.now { color: var(--red); }
+.lv-tag.done { color: var(--ok); }
+#progressTotal { font-size: 13px; color: var(--muted); font-weight: 500; }
 
 .bar { height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 5px; }
 .bar i { display: block; height: 100%; background: var(--ink); opacity: .8; }
@@ -570,16 +571,28 @@ body.catalog .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 /* ============================================================
    Grand écran (PC) : on utilise la largeur. Sur mobile, rien ne change.
    ============================================================ */
-.home-col { display: contents; }   /* mobile : les panneaux de l'accueil s'enchaînent normalement */
 
 @media (min-width: 900px) {
   main { max-width: 1200px; }
   #login, #end, #settings { max-width: 640px; margin-inline: auto; }
 
-  /* Accueil : série, objectif du jour et « Tous les kanji » à gauche ; niveaux à droite */
-  #home { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; align-items: start; }
-  #home .welcome { grid-column: 1 / -1; }
-  .home-col { display: flex; flex-direction: column; }
+  /* Accueil : à gauche [série | objectif] puis « Tous les kanji », à droite « Ma progression ».
+     Les deux colonnes ont la même hauteur : « Tous les kanji » s'étire, son bouton calé en bas. */
+  #home {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "welcome welcome"
+      "top     progress"
+      "cat     progress";
+    column-gap: 16px;
+  }
+  #home .welcome { grid-area: welcome; }
+  #home .home-top { grid-area: top; }
+  #home .home-cat { grid-area: cat; display: flex; flex-direction: column; }
+  #home .home-cat .row { margin-top: auto; }
+  #home .home-progress { grid-area: progress; }
 
   /* Session : consigne et explications à gauche ; à droite, la zone de dessin (aussi grande que la
      hauteur le permet) avec les boutons Vérifier / Raté–Juste / Suivant juste en dessous.
@@ -665,3 +678,13 @@ dialog.ask { margin: auto; max-width: min(380px, calc(100% - 32px)); color: var(
 dialog.ask::backdrop { background: rgba(0, 0, 0, .5); }
 dialog.ask p { margin: 0 0 16px; }
 .ask-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+.set-levels { display: flex; gap: 14px; flex-wrap: wrap; margin: 8px 0 14px; }
+
+/* Accueil : série et objectif du jour côte à côte, même hauteur (mobile comme PC) */
+.home-top { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.home-top > .panel { margin: 0; }
+.home-top .streak { flex-direction: column; align-items: flex-start; justify-content: center; gap: 6px; }
+.home-top .streak .flame { font-size: 30px; }
+.home-top .streak-main { min-width: 0; flex: none; }
+.home-top .today-head { flex-wrap: wrap; row-gap: 2px; }
+.home-top .start-btns button { padding-inline: 14px; }

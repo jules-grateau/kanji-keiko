@@ -5,7 +5,7 @@
 //   notes: { kanji: texte },
 //   days:  ["AAAA-MM-JJ", …]   jours d’entraînement, pour la série (voir public/js/streak.js)
 //   intro: { "AAAA-MM-JJ": [kanji, …] }   kanji découverts chaque jour, pour l'objectif (public/js/goal.js)
-//   settings: { lv: [niveaux], goal, hard, t }   réglages du compte ; t = date du changement, le plus récent gagne
+//   settings: { skip: [niveaux exclus], goal, hard, t }   réglages du compte ; t = date du changement, le plus récent gagne
 //   t:     dernière mise à jour
 // }
 const fs = require("fs");
@@ -52,7 +52,7 @@ function save(userId, state) {
 const isValidEntry = e => Array.isArray(e) && e.length === 4 && e.every(Number.isFinite);
 
 const isValidSettings = s => !!s && typeof s === "object"
-  && Array.isArray(s.lv) && s.lv.length <= 5 && s.lv.every(n => Number.isInteger(n) && n >= 1 && n <= 5)
+  && Array.isArray(s.skip) && s.skip.length <= 5 && s.skip.every(n => Number.isInteger(n) && n >= 1 && n <= 5)
   && Number.isInteger(s.goal) && s.goal >= 1 && s.goal <= 100
   && typeof s.hard === "boolean" && Number.isFinite(s.t);
 
@@ -105,7 +105,7 @@ function merge(userId, incoming) {
   // Réglages : on garde les plus récents.
   const s = incoming.settings;
   if (isValidSettings(s) && (!state.settings || s.t > state.settings.t)) {
-    state.settings = { lv: [...new Set(s.lv)], goal: s.goal, hard: s.hard, t: s.t };
+    state.settings = { skip: [...new Set(s.skip)], goal: s.goal, hard: s.hard, t: s.t };
   }
 
   state.t = Date.now();

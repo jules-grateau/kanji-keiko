@@ -23,12 +23,14 @@ const KEY_PROGRESS = "kanji-srs-v1";
 const KEY_SETTINGS = "kanji-set-v1";
 const KEY_NOTES = "kanji-notes-v1";
 
-// Réglages : niveaux choisis, objectif de nouveaux kanji par jour, mode difficile.
+// Réglages : niveaux exclus, objectif de nouveaux kanji par jour, mode difficile.
+// Par défaut, tous les niveaux, de N5 vers N1 ; `skip` liste ceux qu'on saute pour les nouveaux kanji.
+// (L'ancien réglage `lv`, niveaux choisis, est volontairement oublié : tout le monde repart sur N5 → N1.)
 // Ils suivent le compte (synchro) : `t` = date du dernier changement, le plus récent gagne.
 function normalizeSettings(s) {
-  if (!s) return { lv: [3, 2], goal: 10, hard: false, t: 0 };   // valeurs par défaut : le serveur l'emporte
+  if (!s) return { skip: [], goal: 10, hard: false, t: 0 };   // valeurs par défaut : le serveur l'emporte
   return {
-    lv: Array.isArray(s.lv) ? s.lv.filter(n => LEVELS.includes(n)) : [3, 2],
+    skip: Array.isArray(s.skip) ? s.skip.filter(n => LEVELS.includes(n)) : [],
     goal: isValidGoal(s.goal) ? s.goal : isValidGoal(s.n) ? s.n : 10,   // n : ancien « par session »
     hard: !!s.hard,
     t: Number.isFinite(s.t) ? s.t : 1,   // ancien réglage local sans date : préféré aux valeurs par défaut
@@ -80,18 +82,24 @@ function levelStats() {
   return out;
 }
 
-// Kanji des niveaux choisis, dans l'ordre de la liste.
+// Niveaux d'où viennent les nouveaux kanji, de N5 vers N1 (tous, sauf ceux exclus dans les Réglages).
+const activeLevels = (skip = settings.skip) => LEVELS.filter(n => !skip.includes(n));
+
+// Kanji des niveaux actifs, dans l'ordre de la liste (N5 d'abord).
 const levelPool = () => {
-  const levels = new Set(settings.lv);
+  const levels = new Set(activeLevels());
   return KANJI.filter(r => levels.has(r[1])).map(r => r[0]);
 };
 
-// Kanji jamais vus des niveaux choisis : les prochains à découvrir.
+// Niveau « en cours » : le premier niveau actif qui a encore des kanji jamais vus.
+const currentLevel = () => activeLevels().find(n => KANJI.some(r => r[1] === n && !progress[r[0]]));
+
+// Kanji jamais vus des niveaux actifs : les prochains à découvrir.
 const newKanji = () => levelPool().filter(k => !progress[k]);
 
 // Kanji à travailler : TOUTES les révisions échues, de tous les niveaux (un kanji appris se révise,
 // même hors des niveaux choisis), les plus anciennes d'abord et sans plafond pour respecter le SRS,
-// + les nouveaux des niveaux choisis qui restent pour l'objectif du jour (ou `extraNew` au-delà).
+// + les nouveaux des niveaux actifs (N5 d'abord) qui restent pour l'objectif du jour (ou `extraNew` au-delà).
 function buildQueue(extraNew = 0) {
   const now = Date.now();
   const due = Object.keys(progress)

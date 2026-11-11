@@ -180,8 +180,8 @@ function openCatalog() {
   catalogSelected = null;
   catalogQuery = "";
   $("catSearch").value = "";
-  // On ouvre sur le niveau le plus facile parmi ceux choisis à l'accueil.
-  catalogLevel = settings.lv.length ? Math.max(...settings.lv) : 5;
+  // On ouvre sur le niveau en cours (celui d'où viennent les nouveaux kanji).
+  catalogLevel = currentLevel() || 5;
   showScreen("catalog");
   renderCatalog(true);
 }

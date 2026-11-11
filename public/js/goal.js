@@ -36,10 +36,10 @@ function mergeIntro(incoming) {
 }
 
 // Aperçu pour l'écran Réglages : avec `goal` nouveaux kanji par jour, quand aura-t-on vu chaque niveau ?
-// On suit l'ordre des sessions (niveaux choisis, de N5 vers N1, l'un après l'autre) et on part
-// d'aujourd'hui, en tenant compte de ce qui a déjà été découvert aujourd'hui.
+// On suit l'ordre des sessions (niveaux actifs, de N5 vers N1, l'un après l'autre ; `skip` = exclus)
+// et on part d'aujourd'hui, en tenant compte de ce qui a déjà été découvert aujourd'hui.
 // Renvoie { levels: [{ n, left, selected, days, date }], mine, all } ; days = jours d'étude nécessaires.
-function goalPreview(goal) {
+function goalPreview(goal, skip = settings.skip) {
   const left = {};
   LEVELS.forEach(n => { left[n] = 0; });
   KANJI.forEach(r => { if (!progress[r[0]]) left[r[1]]++; });
@@ -57,7 +57,7 @@ function goalPreview(goal) {
 
   let mine = 0, all = 0;
   const levels = LEVELS.map(n => {
-    const selected = settings.lv.includes(n);
+    const selected = !skip.includes(n);
     all += left[n];
     if (selected) mine += left[n];
     return { n, left: left[n], selected, ...(selected ? finish(mine) : {}) };
