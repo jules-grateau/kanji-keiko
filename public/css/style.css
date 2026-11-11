@@ -562,3 +562,51 @@ body.catalog .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 .kd-info small { color: var(--muted); font-size: 12px; }
 .kd-info .ghost { align-self: flex-start; margin-top: 4px; padding: 6px 12px; }
 .cd-close { position: absolute; top: 8px; right: 10px; text-decoration: none; font-size: 16px; }
+
+/* ============================================================
+   Grand écran (PC) : on utilise la largeur. Sur mobile, rien ne change.
+   ============================================================ */
+.home-col { display: contents; }   /* mobile : les panneaux de l'accueil s'enchaînent normalement */
+
+@media (min-width: 900px) {
+  main { max-width: 1200px; }
+  #login, #end { max-width: 560px; margin-inline: auto; }
+
+  /* Accueil : niveaux à gauche ; « Aujourd'hui » (avec Commencer) puis « Tous les kanji » à droite */
+  #home { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; align-items: start; }
+  #home .welcome { grid-column: 1 / -1; }
+  .home-col { display: flex; flex-direction: column; }
+  .home-today { order: -1; }
+
+  /* Session : consigne et explications à gauche ; à droite, la zone de dessin (aussi grande que la
+     hauteur le permet) avec les boutons Vérifier / Raté–Juste / Suivant juste en dessous.
+     Avant Vérifier, le tracé fait 2/3 de la zone : sa hauteur ≈ (largeur − 8px) × 2/3.
+     Les 210px laissent la place à l'en-tête, aux boutons et au verdict. */
+  #card {
+    --ws: min(840px, calc((100dvh - 210px) * 1.5 + 8px), calc(100vw - 400px));
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) var(--ws);
+    grid-template-rows: auto auto auto 1fr auto auto;   /* la ligne 1fr absorbe la hauteur du dessin */
+    grid-template-areas:
+      "meta  ws"
+      "mean  ws"
+      "read  ws"
+      "res   ws"
+      "res   act"
+      "res   verdict";
+    column-gap: 24px;
+    align-items: start;
+  }
+  #card > .meta { grid-area: meta; }
+  #card > .mean { grid-area: mean; }
+  #card > .readings { grid-area: read; }
+  #card > #result { grid-area: res; }
+  #card > .workspace { grid-area: ws; margin: 0 0 12px; }
+  #card > .actions { grid-area: act; }
+  #card > .verdict { grid-area: verdict; }
+  #card .lab { text-align: left; }
+  #card .steps { justify-content: flex-start; }
+
+  /* Tous les kanji : chips un peu plus grands */
+  .kchip { width: 48px; height: 48px; font-size: 26px; }
+}

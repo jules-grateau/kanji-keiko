@@ -31,6 +31,8 @@
     <p><b>👋 Tu connais déjà des kanji ?</b><br>Marque-les pour ne pas les revoir en session.</p>
     <div class="row"><button class="primary" id="welcomeGo">Marquer ceux que je connais</button><button class="link" id="welcomeLater">Plus tard</button></div>
   </div>
+  <!-- Deux colonnes sur grand écran ; sur mobile, les panneaux s'enchaînent dans l'ordre du HTML -->
+  <div class="home-col">
   <div class="panel streak" id="streak">
     <span class="flame" aria-hidden="true">🔥</span>
     <div class="streak-main"><b id="streakCount">0</b> <span id="streakUnit">jour de suite</span><small id="streakHint"></small></div>
@@ -45,12 +47,14 @@
       <label class="chk"><input type="checkbox" id="hard"> Mode difficile (sens seul)</label>
     </div>
   </div>
+  </div>
+  <div class="home-col">
   <!-- Accès à l'écran « Tous les kanji » -->
   <div class="panel">
     <h3>Tous les kanji</h3>
     <div class="row"><span class="note"><b id="knownCount">0</b> marqués « Je le maîtrise »</span><button class="ghost" id="openCatalog">Voir tous les kanji</button></div>
   </div>
-  <div class="panel">
+  <div class="panel home-today">
     <h3>Aujourd’hui</h3>
     <div class="stats"><div><b id="sDue">0</b><span>à réviser</span></div><div><b id="sNew">0</b><span>nouveaux</span></div><div><b id="sMast">0</b><span>maîtrisés</span></div></div>
     <div class="row" style="margin-top:14px"><button class="primary" id="start">Commencer</button><button class="link" id="reset">Réinitialiser la progression</button></div>
@@ -58,6 +62,7 @@
     <h3 style="margin-top:16px">Compte</h3>
     <div class="row"><span class="note" id="who"></span><button class="link" id="logout">Se déconnecter</button></div>
     <p class="note" id="syncnote"></p>
+  </div>
   </div>
 </section>
 
