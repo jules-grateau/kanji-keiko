@@ -4,7 +4,7 @@
 //   node scripts/build-icons.js
 //
 // Le kanji 書 (« écrire ») est dessiné avec ses tracés KanjiVG (public/data/strokes.js, CC BY-SA 3.0),
-// en encre sur le fond papier de l'appli, avec la croix pointillée de la zone de dessin et le dernier trait
+// en encre sur le fond papier de l'appli (sans fond pour l'onglet du navigateur), avec la croix pointillée de la zone de dessin et le dernier trait
 // en rouge (comme la dernière étape de « Trait par trait »).
 //
 // Les SVG sont écrits directement. Les PNG (exigés par les téléphones) sont rendus par Chrome / Edge en
@@ -19,15 +19,25 @@ const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "public/icons");
 const KANJI = "書";
 const PAPER = "#f3eee2", LINE = "#d9d1bf", INK = "#1d1a16", RED = "#c23a22";
+// Icône d'onglet : sans fond (elle se fond dans la barre d'onglets) ; encre noire en mode clair, crème en mode
+// sombre, selon le mode annoncé par le navigateur. Les icônes PNG des téléphones gardent le fond papier.
+const DARK = { ink: "#eee7d8", red: "#e8654d" };
 
 const STROKES = (0, eval)("(" + fs.readFileSync(path.join(ROOT, "public/data/strokes.js"), "utf8")
   .replace(/^[\s\S]*?const STROKES =/, "").replace(/;\s*$/, "") + ")");
 
 // Icône 512×512. `pad` : marge autour du kanji ; `radius` : coins arrondis (0 = carré plein, pour les
 // téléphones qui découpent eux-mêmes la forme) ; maskable : kanji dans la zone sûre centrale (Android).
-function iconSvg({ pad, radius }) {
+function iconSvg({ pad, radius, tab }) {
   const paths = STROKES[KANJI], scale = (512 - 2 * pad) / 109;   // tracés KanjiVG : viewBox 109×109
-  const strokes = paths.map((d, i) => `<path d="${d}" stroke="${i === paths.length - 1 ? RED : INK}"/>`).join("");
+  const strokes = paths.map((d, i) => `<path class="${i === paths.length - 1 ? "red" : "ink"}" d="${d}" stroke="${i === paths.length - 1 ? RED : INK}"/>`).join("");
+  if (tab) {   // onglet : ni fond ni croix (invisible à 16 px), traits un peu plus épais
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">`
+      + `<style>@media (prefers-color-scheme: dark) { .ink { stroke: ${DARK.ink} } .red { stroke: ${DARK.red} } }</style>`
+      + `<g transform="translate(${pad},${pad}) scale(${scale})" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="7.5">${strokes}</g>`
+      + `</svg>
+`;
+  }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">`
     + `<rect width="512" height="512" rx="${radius}" fill="${PAPER}"/>`
     + `<path d="M256 ${pad - 26}V${512 - pad + 26}M${pad - 26} 256H${512 - pad + 26}" stroke="${LINE}" stroke-width="3" stroke-dasharray="14 12"/>`
@@ -36,7 +46,7 @@ function iconSvg({ pad, radius }) {
 }
 
 const ICONS = {
-  "icon.svg": { pad: 66, radius: 112 },             // onglet du navigateur
+  "icon.svg": { pad: 40, tab: true },               // onglet du navigateur : sans fond, clair / sombre
   "icon-any.svg": { pad: 66, radius: 0 },           // base des PNG « any »
   "icon-maskable.svg": { pad: 120, radius: 0 },     // Android : la forme est découpée par le téléphone
 };
