@@ -9,3 +9,6 @@ initPad();
 initSession();
 renderHome();
 initSync();
+
+// Service worker (sw.js) : l'appli s'ouvre et marche aussi sans réseau.
+if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});

@@ -2,12 +2,26 @@
 //
 // L’application demande d’être connecté avec Google (écran « login »). Ensuite, chaque changement
 // est gardé dans le localStorage puis envoyé au serveur (cookie de session), qui renvoie la progression fusionnée.
+//
+// Hors ligne (transports) : si le serveur ne répond pas au démarrage mais que ce téléphone connaît déjà
+// le compte, on entre quand même ; les réponses restent sur l'appareil et partent au retour du réseau.
 
-const KEY_ACCOUNT = "kanji-account";   // email du compte à qui appartient la progression locale
+const KEY_ACCOUNT = "kanji-account";            // email du compte à qui appartient la progression locale
+const KEY_ACCOUNT_INFO = "kanji-account-info";  // { email, name } : pour entrer dans l'appli sans réseau
+const NETWORK_TIMEOUT = 6000;   // au-delà, le serveur est considéré comme injoignable (réseau trop lent)
+const RETRY_DELAY = 30000;      // nouvel essai d'envoi tant que le serveur est injoignable
 
 let account = null;     // { email, name } une fois connecté
 let syncTimer = null;
+let syncOk = false;     // dernier envoi réussi ? (sinon des réponses attendent sur l'appareil)
 let dirtyNotes = {};    // notes modifiées localement depuis le dernier envoi : le serveur ne doit pas les écraser
+
+// fetch qui abandonne au bout de NETWORK_TIMEOUT (dans le métro, le réseau peut ne jamais répondre).
+function fetchTimeout(url, options = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), NETWORK_TIMEOUT);
+  return fetch(url, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(timer));
+}
 
 const canSync = () => !!account;
 // Message de synchro (menu du compte) ; `ok` = enregistré sur le serveur (point vert sur l'avatar).
@@ -53,7 +67,7 @@ function mergeFromServer(remote) {
 // Envoie l'état local (ou `body` si fourni) et récupère l'état fusionné du serveur.
 async function push(body) {
   try {
-    const res = await fetch("api/state", {
+    const res = await fetchTimeout("api/state", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body || { srs: progress, notes, days: activeDays, intro: introDays, settings }),
@@ -62,11 +76,18 @@ async function push(body) {
     if (!res.ok) throw new Error(res.status);
     mergeFromServer(await res.json());
     dirtyNotes = {};
+    syncOk = true;
     renderHome();
     const time = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
     setSyncMessage("Synchronisé à " + time + ".");
   } catch (e) {
-    setSyncMessage("Serveur injoignable : tes données restent sur cet appareil et partiront au prochain essai.", false);
+    syncOk = false;
+    setSyncMessage(navigator.onLine === false
+      ? "Hors ligne : tes réponses restent sur ce téléphone et partiront au retour du réseau."
+      : "Serveur injoignable : tes réponses restent sur ce téléphone et partiront au prochain essai.", false);
+    // Nouvel essai un peu plus tard (et dès que le téléphone retrouve le réseau, voir initSync).
+    clearTimeout(syncTimer);
+    if (canSync()) syncTimer = setTimeout(() => push(), RETRY_DELAY);
   }
 }
 
@@ -101,6 +122,7 @@ function showSignedIn(user) {
   const owner = load(KEY_ACCOUNT, null);
   if (owner && owner !== user.email) clearLocalData();
   save(KEY_ACCOUNT, user.email);
+  save(KEY_ACCOUNT_INFO, { email: user.email, name: user.name });
 
   renderAccount(user);
   renderHome();
@@ -151,9 +173,13 @@ function renderGoogleButton() {
 async function logout() {
   clearTimeout(syncTimer);
   await push();                      // envoie les derniers changements avant de partir
-  await postJson("api/logout");
+  // Se déconnecter efface la progression de ce téléphone : pas question de perdre des réponses pas encore envoyées.
+  if (!syncOk && !confirm("Tes dernières réponses n’ont pas encore pu être envoyées (pas de réseau). "
+    + "Te déconnecter maintenant les effacerait de ce téléphone. Te déconnecter quand même ?")) return;
+  try { await postJson("api/logout"); } catch (e) {}
   clearLocalData();
   localStorage.removeItem(KEY_ACCOUNT);
+  localStorage.removeItem(KEY_ACCOUNT_INFO);
   showSignedOut("Tu es déconnecté. Ta progression est sauvegardée : reconnecte-toi pour la retrouver.");
 }
 
@@ -196,12 +222,20 @@ async function initSync() {
     return setLoginMessage("Ouvre la page depuis ton serveur pour pouvoir te connecter.", "error");
   }
 
+  // Retour du réseau : on envoie tout de suite ce qui attend.
+  window.addEventListener("online", () => { if (canSync()) push(); });
+
   // Déjà connecté (cookie de session valide) ? Sinon, écran de connexion.
   try {
-    const res = await fetch("api/me");
+    if (navigator.onLine === false) throw new Error("hors ligne");   // inutile d'attendre le serveur
+    const res = await fetchTimeout("api/me");
     if (res.ok) return showSignedIn(await res.json());
     showSignedOut();
   } catch (e) {
-    showSignedOut("Le serveur ne répond pas. Réessaie dans un instant.", "error");
+    // Pas de réseau : si ce téléphone connaît déjà le compte, on entre quand même (hors ligne).
+    // Le serveur revérifiera la session au premier envoi (et renverra à la connexion si elle a expiré).
+    const known = load(KEY_ACCOUNT_INFO, null) || (load(KEY_ACCOUNT, null) && { email: load(KEY_ACCOUNT, null) });
+    if (known) return showSignedIn(known);
+    showSignedOut("Pas de réseau : la première connexion en demande. Réessaie quand tu en as.", "error");
   }
 }
