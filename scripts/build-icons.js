@@ -19,8 +19,10 @@ const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "public/icons");
 const KANJI = "書";
 const PAPER = "#f3eee2", LINE = "#d9d1bf", INK = "#1d1a16", RED = "#c23a22";
-// Icône d'onglet : sans fond (elle se fond dans la barre d'onglets) ; encre noire en mode clair, crème en mode
-// sombre, selon le mode annoncé par le navigateur. Les icônes PNG des téléphones gardent le fond papier.
+// Icône d'onglet : sans fond (elle se fond dans la barre d'onglets), en deux fichiers : encre noire pour un
+// onglet clair, crème pour un onglet sombre. C'est la page qui choisit (js/main.js), avec le même thème que
+// l'appli : une icône qui changerait de couleur toute seule suit Windows dans Chrome, pas le thème du navigateur.
+// Les icônes PNG des téléphones gardent le fond papier.
 const DARK = { ink: "#eee7d8", red: "#e8654d" };
 
 const STROKES = (0, eval)("(" + fs.readFileSync(path.join(ROOT, "public/data/strokes.js"), "utf8")
@@ -30,10 +32,10 @@ const STROKES = (0, eval)("(" + fs.readFileSync(path.join(ROOT, "public/data/str
 // téléphones qui découpent eux-mêmes la forme) ; maskable : kanji dans la zone sûre centrale (Android).
 function iconSvg({ pad, radius, tab }) {
   const paths = STROKES[KANJI], scale = (512 - 2 * pad) / 109;   // tracés KanjiVG : viewBox 109×109
-  const strokes = paths.map((d, i) => `<path class="${i === paths.length - 1 ? "red" : "ink"}" d="${d}" stroke="${i === paths.length - 1 ? RED : INK}"/>`).join("");
+  const ink = tab === "dark" ? DARK.ink : INK, red = tab === "dark" ? DARK.red : RED;
+  const strokes = paths.map((d, i) => `<path d="${d}" stroke="${i === paths.length - 1 ? red : ink}"/>`).join("");
   if (tab) {   // onglet : ni fond ni croix (invisible à 16 px), traits un peu plus épais
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">`
-      + `<style>@media (prefers-color-scheme: dark) { .ink { stroke: ${DARK.ink} } .red { stroke: ${DARK.red} } }</style>`
       + `<g transform="translate(${pad},${pad}) scale(${scale})" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="7.5">${strokes}</g>`
       + `</svg>
 `;
@@ -46,7 +48,8 @@ function iconSvg({ pad, radius, tab }) {
 }
 
 const ICONS = {
-  "icon.svg": { pad: 40, tab: true },               // onglet du navigateur : sans fond, clair / sombre
+  "icon-light.svg": { pad: 40, tab: "light" },      // onglet clair : encre noire, sans fond
+  "icon-dark.svg": { pad: 40, tab: "dark" },        // onglet sombre : encre crème, sans fond
   "icon-any.svg": { pad: 66, radius: 0 },           // base des PNG « any »
   "icon-maskable.svg": { pad: 120, radius: 0 },     // Android : la forme est découpée par le téléphone
 };
