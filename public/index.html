@@ -4,6 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>漢字稽古 · entraînement à l’écriture</title>
+<!-- Application installable (écran d'accueil du téléphone) : manifeste et icônes (scripts/build-icons.js) -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kanji Keiko">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<!-- Couleur de la barre du téléphone : celle du fond de l'appli, en clair comme en sombre -->
+<meta name="theme-color" content="#f3eee2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16140f" media="(prefers-color-scheme: dark)">
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -15,6 +27,13 @@
     <button class="account-btn" id="accountBtn" aria-haspopup="true" aria-expanded="false" aria-controls="accountMenu">
       <span class="avatar" id="accountAvatar"></span><span class="account-name" id="accountName"></span> ▾
     </button>
+    <!-- Marche à suivre pour installer l'appli quand le navigateur ne le propose pas lui-même -->
+    <dialog class="panel ask install-help" id="installHelp">
+      <p><b>Installer Kanji Keiko</b></p>
+      <ol id="installSteps"></ol>
+      <p class="note">L'appli apparaît alors sur ton écran d'accueil et s'ouvre en plein écran.</p>
+      <button class="primary" id="installHelpClose">Compris</button>
+    </dialog>
     <div class="account-menu hide" id="accountMenu" role="menu">
       <div class="account-who">
         <span class="avatar" id="accountAvatar2"></span>
@@ -25,6 +44,7 @@
       <button role="menuitem" id="openSettings">⚙ Réglages</button>
       <button role="menuitem" id="menuSources">📜 Sources et licences</button>
       <button role="menuitem" data-srs-help>❓ Comment marche la révision</button>
+      <button role="menuitem" class="hide" id="installApp">📲 Installer l'appli</button>
       <hr>
       <button role="menuitem" class="danger" id="logout">Se déconnecter</button>
     </div>

@@ -784,3 +784,9 @@ dialog.ask p { margin: 0 0 16px; }
 .fam { display: inline-flex; flex-direction: column; align-items: center; min-width: 46px; padding: 4px 6px; border: 1px solid var(--indigo); border-radius: 8px; }
 .fam b { font-size: 24px; font-weight: 500; line-height: 1.1; }
 .fam small { font-size: 11px; color: var(--indigo); font-weight: 700; }
+
+/* Marche à suivre pour installer l'appli */
+dialog.install-help { text-align: left; }
+.install-help ol { margin: 0 0 12px; padding-left: 20px; }
+.install-help li { margin-bottom: 8px; }
+.install-help .primary { display: block; margin: 14px auto 0; }

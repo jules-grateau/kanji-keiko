@@ -17,7 +17,8 @@ const SOURCES = {
     author: "Ulrich Apel et les contributeurs de KanjiVG",
     license: "CC BY-SA 3.0", licenseUrl: "https://creativecommons.org/licenses/by-sa/3.0/deed.fr",
     url: "https://kanjivg.tagaini.net/",
-    used: "tracés et ordre des traits (animation, trait par trait, kanji affiché sur ton dessin), nombre de traits",
+    used: "tracés et ordre des traits (animation, trait par trait, kanji affiché sur ton dessin), nombre de traits, "
+      + "et le kanji 書 de l'icône de l'appli",
   },
   jlpt: {
     name: "Listes JLPT de Jonathan Waller", short: "J. Waller",

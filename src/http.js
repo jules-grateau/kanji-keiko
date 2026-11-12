@@ -8,12 +8,18 @@ const MIME = {
   ".css": "text/css",
   ".js": "text/javascript",
   ".json": "application/json",
+  ".webmanifest": "application/manifest+json",   // application installable (PWA)
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
 };
+
+// Types texte : on y précise l'encodage (pas pour les images PNG).
+const isText = type => /^(text\/|application\/(json|manifest\+json)|image\/svg\+xml)/.test(type);
 
 // Envoie une réponse ; un objet est sérialisé en JSON.
 function send(res, code, body, type = "application/json") {
   res.writeHead(code, {
-    "Content-Type": type + "; charset=utf-8",
+    "Content-Type": isText(type) ? type + "; charset=utf-8" : type,
     "Cache-Control": "no-store",
     "X-Content-Type-Options": "nosniff",
   });
