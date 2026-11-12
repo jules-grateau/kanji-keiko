@@ -24,6 +24,19 @@ function componentName(c) {
 // Kanji élémentaire = son seul composant, c'est lui-même.
 const isElementary = k => k.components.length === 1 && k.components[0] === k.char;
 
+// Famille phonétique (données Kanjium) : la partie du kanji qui donne sa lecture on, et les autres
+// kanji de la liste qui la partagent. null si le kanji n'en a pas (pictogrammes, etc.).
+function phoneticFamily(k) {
+  if (!k.phonetic) return null;
+  const [key, readings] = k.phonetic.split("|");
+  return {
+    key,
+    reading: (readings || "").split("、")[0],
+    self: key === k.char,   // le kanji est lui-même le composant phonétique (ex. 青)
+    family: [...k.family].map(c => ({ char: c, on: KANJI_BY_CHAR[c] ? KANJI_BY_CHAR[c][4][0] || "" : "" })),
+  };
+}
+
 // Kanji de forme proche, à ne pas confondre : "毎（every）, 梅（plum）", ou "" s'il n'y en a pas.
 function similarText(k) {
   return [...k.similar].map(x => x + "（" + componentName(x) + "）").join(", ");

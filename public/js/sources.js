@@ -89,6 +89,7 @@ function renderCardSources(char, revealed) {
   if (revealed) {
     parts.push(sourceLink("kanjivg", "ordre des traits"));
     if (!isElementary(k)) parts.push(sourceLink("kradfile", "composants") + " / " + sourceLink("unicode", "").trim());
+    if (phoneticFamily(k) && k.family) parts.push(sourceLink("kanjium", "famille phonétique"));
     if (k.similar) parts.push(sourceLink("kanjium", "« ne pas confondre »") + " / " + sourceLink("yencken", "").trim());
   }
   $("cardSources").innerHTML = "Sources : " + parts.join(" · ")

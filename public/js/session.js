@@ -204,13 +204,29 @@ function next() {
   nextCard();
 }
 
-// Section « Décortiquer ce kanji » : composants, kanji à ne pas confondre,
+// Section « Décortiquer ce kanji » : composants, famille phonétique, kanji à ne pas confondre,
 // liens vers des astuces écrites par des humains, et note perso.
+// Famille phonétique : « [青] セイ — 青 donne le son de 晴 », puis les kanji de la famille et leur lecture on.
+function renderPhonetic(k) {
+  const p = phoneticFamily(k);
+  setHidden("phon", !p || !p.family.length);
+  if (!p || !p.family.length) return;
+  const intro = p.self
+    ? `${esc(k.char)} sert lui-même de composant phonétique. On le retrouve dans :`
+    : `${esc(p.key)} donne le son de ${esc(k.char)}. Même composant, même famille :`;
+  $("phon").innerHTML = `<p class="phon-title">🔊 Famille phonétique</p>
+    <div class="phon-head"><span class="phon-key jp">${esc(p.key)}</span><span class="phon-read jp">${esc(toKatakana(p.reading))}</span></div>
+    <p class="note">${intro}</p>
+    <div class="phon-fam">${p.family.map(f =>
+      `<span class="fam"><b class="jp">${esc(f.char)}</b><small class="jp">${esc(toKatakana(f.on))}</small></span>`).join("")}</div>`;
+}
+
 function renderExplanation(char) {
   const k = kanjiInfo(char);
   $("comps").innerHTML = isElementary(k)
     ? '<span class="note">Kanji élémentaire : il ne se décompose pas, c’est lui-même un composant.</span>'
     : k.components.map(c => `<div class="comp"><b>${esc(c)}</b><span>${esc(componentName(c) || "—")}</span></div>`).join("");
+  renderPhonetic(k);
   const similar = similarText(k);
   $("similar").textContent = similar ? "Ne pas confondre avec " + similar + "." : "";
   setHidden("similar", !similar);
