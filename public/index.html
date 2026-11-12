@@ -6,8 +6,10 @@
 <title>漢字稽古 · entraînement à l’écriture</title>
 <!-- Application installable (écran d'accueil du téléphone) : manifeste et icônes (scripts/build-icons.js) -->
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+<!-- Icône d'onglet : SVG sans fond (clair / sombre). ?v=… : à changer quand l'icône change, sinon les
+     navigateurs gardent l'ancienne en mémoire. Le PNG ne sert qu'aux navigateurs sans SVG. -->
+<link rel="icon" href="icons/icon.svg?v=2" type="image/svg+xml" sizes="any">
+<link rel="icon" href="icons/icon-192.png?v=2" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
