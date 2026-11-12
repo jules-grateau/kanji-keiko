@@ -4,7 +4,7 @@
 //   node scripts/build-icons.js
 //
 // Le kanji 書 (« écrire ») est dessiné avec ses tracés KanjiVG (public/data/strokes.js, CC BY-SA 3.0),
-// en encre sur le fond papier de l'appli (sans fond pour l'onglet du navigateur), avec la croix pointillée de la zone de dessin et le dernier trait
+// en encre sur le fond papier de l'appli (en rond, cerclé d'encre, pour l'onglet du navigateur), avec la croix pointillée de la zone de dessin et le dernier trait
 // en rouge (comme la dernière étape de « Trait par trait »).
 //
 // Les SVG sont écrits directement. Les PNG (exigés par les téléphones) sont rendus par Chrome / Edge en
@@ -19,23 +19,20 @@ const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "public/icons");
 const KANJI = "書";
 const PAPER = "#f3eee2", LINE = "#d9d1bf", INK = "#1d1a16", RED = "#c23a22";
-// Icône d'onglet : sans fond (elle se fond dans la barre d'onglets), en deux fichiers : encre noire pour un
-// onglet clair, crème pour un onglet sombre. C'est la page qui choisit (js/main.js), avec le même thème que
-// l'appli : une icône qui changerait de couleur toute seule suit Windows dans Chrome, pas le thème du navigateur.
-// Les icônes PNG des téléphones gardent le fond papier.
-const DARK = { ink: "#eee7d8", red: "#e8654d" };
+// Icône d'onglet : la version ronde de l'icône de l'écran d'accueil (disque papier cerclé d'encre). Le cercle
+// d'encre la détache d'une barre d'onglets sombre, le papier d'une barre claire : pas besoin de suivre le thème.
 
 const STROKES = (0, eval)("(" + fs.readFileSync(path.join(ROOT, "public/data/strokes.js"), "utf8")
   .replace(/^[\s\S]*?const STROKES =/, "").replace(/;\s*$/, "") + ")");
 
 // Icône 512×512. `pad` : marge autour du kanji ; `radius` : coins arrondis (0 = carré plein, pour les
 // téléphones qui découpent eux-mêmes la forme) ; maskable : kanji dans la zone sûre centrale (Android).
-function iconSvg({ pad, radius, tab }) {
+function iconSvg({ pad, radius, round }) {
   const paths = STROKES[KANJI], scale = (512 - 2 * pad) / 109;   // tracés KanjiVG : viewBox 109×109
-  const ink = tab === "dark" ? DARK.ink : INK, red = tab === "dark" ? DARK.red : RED;
-  const strokes = paths.map((d, i) => `<path d="${d}" stroke="${i === paths.length - 1 ? red : ink}"/>`).join("");
-  if (tab) {   // onglet : ni fond ni croix (invisible à 16 px), traits un peu plus épais
+  const strokes = paths.map((d, i) => `<path d="${d}" stroke="${i === paths.length - 1 ? RED : INK}"/>`).join("");
+  if (round) {   // onglet : disque papier cerclé d'encre, sans croix (invisible à 16 px)
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">`
+      + `<circle cx="256" cy="256" r="244" fill="${PAPER}" stroke="${INK}" stroke-width="20"/>`
       + `<g transform="translate(${pad},${pad}) scale(${scale})" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="7.5">${strokes}</g>`
       + `</svg>
 `;
@@ -48,8 +45,7 @@ function iconSvg({ pad, radius, tab }) {
 }
 
 const ICONS = {
-  "icon-light.svg": { pad: 40, tab: "light" },      // onglet clair : encre noire, sans fond
-  "icon-dark.svg": { pad: 40, tab: "dark" },        // onglet sombre : encre crème, sans fond
+  "icon-tab.svg": { pad: 104, round: true },        // onglet du navigateur : rond papier cerclé d'encre
   "icon-any.svg": { pad: 66, radius: 0 },           // base des PNG « any »
   "icon-maskable.svg": { pad: 120, radius: 0 },     // Android : la forme est découpée par le téléphone
 };

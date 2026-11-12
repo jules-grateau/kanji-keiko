@@ -6,11 +6,11 @@
 <title>漢字稽古 · entraînement à l’écriture</title>
 <!-- Application installable (écran d'accueil du téléphone) : manifeste et icônes (scripts/build-icons.js) -->
 <link rel="manifest" href="manifest.webmanifest">
-<!-- Icône d'onglet : SVG sans fond ; js/main.js choisit la version claire ou sombre selon le thème de l'appli.
-     ?v=… : à changer quand l'icône change, sinon les navigateurs gardent l'ancienne en mémoire.
+<!-- Icône d'onglet : version ronde de l'icône de l'écran d'accueil, lisible sur onglet clair comme sombre.
+     Si l'icône change un jour : lui donner un nouveau nom de fichier, sinon les navigateurs gardent l'ancienne.
      Le PNG ne sert qu'aux navigateurs sans SVG ; le SVG est déclaré en dernier car Firefox prend le dernier. -->
-<link rel="icon" href="icons/icon-192.png?v=3" type="image/png" sizes="192x192">
-<link rel="icon" href="icons/icon-light.svg?v=3" type="image/svg+xml" sizes="any" id="favicon">
+<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="icon" href="icons/icon-tab.svg" type="image/svg+xml" sizes="any">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
