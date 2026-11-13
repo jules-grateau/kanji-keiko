@@ -54,6 +54,7 @@ const PNGS = [
   { file: "icon-512.png", svg: "icon-any.svg", size: 512 },
   { file: "icon-maskable-512.png", svg: "icon-maskable.svg", size: 512 },
   { file: "apple-touch-icon.png", svg: "icon-any.svg", size: 180 },   // iPhone : carré plein, iOS arrondit
+  { file: "icon-tab-192.png", svg: "icon-tab.svg", size: 192 },       // onglet, pour les navigateurs qui préfèrent un PNG (Firefox)
 ];
 
 function findChrome() {
