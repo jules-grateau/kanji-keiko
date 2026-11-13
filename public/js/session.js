@@ -12,12 +12,18 @@ function showScreen(id) {
 
 // Deux sortes de séances, séparées : « review » (révisions dues) et « learn » (nouveaux kanji).
 // extraNew : nouveaux kanji en plus de l'objectif (bouton « + 5 en plus »).
+//
+// Apprendre : chaque nouveau kanji est d'abord présenté (carte « Découverte », rien à juger), puis
+// écrit de tête DISCOVER_GAP cartes plus loin. Les tests s'intercalent donc entre les découvertes :
+// D1 D2 D3 T1 T2 T3 D4… Seul le test le fait entrer dans les révisions et compter pour l'objectif.
 function startSession(mode, extraNew = 0) {
   const queue = mode === "review" ? dueKanji() : freshKanji(extraNew);
   session = {
     mode,
     queue: [...queue],
     fresh: new Set(mode === "learn" ? queue : []),   // nouveaux kanji : leur 1re réponse compte pour l'objectif
+    toDiscover: new Set(mode === "learn" ? queue : []),   // pas encore présentés : leur prochaine carte est une découverte
+    discovering: false,   // carte affichée = découverte ?
     current: null,     // kanji affiché
     judged: false,     // réponse déjà jugée ?
     redo: null,        // { k, gap } : kanji à réinsérer dans la file, après `gap` cartes
@@ -38,6 +44,7 @@ function nextCard() {
   if (!session.queue.length) return finishSession();
   const k = kanjiInfo(session.current = session.queue.shift());
   session.judged = false;
+  session.discovering = session.toDiscover.has(k.char);
   clearStrokes();
   resetPad();
   $("workspace").classList.remove("revealed");
@@ -61,14 +68,46 @@ function nextCard() {
 
   $("back").disabled = !session.history.length;
 
-  const left = session.queue.length + 1;
+  // Cartes restantes : la file, plus le test à venir de chaque kanji pas encore présenté.
+  const left = session.queue.length + 1 + session.toDiscover.size;
   $("count").textContent = left + " à faire";
   $("pbar").style.width = (session.done / (session.done + left) * 100) + "%";
+
+  setHidden("phase", !session.discovering);
+  if (session.discovering) showDiscovery(k.char);
+}
+
+// Carte « Découverte » : tout est montré d'emblée (tracé animé, kanji fini, trait par trait, décorticage),
+// avec le modèle en gris dans la zone de dessin pour repasser dessus. Rien à juger : « Suivant ».
+function showDiscovery(char) {
+  setHidden("readings", false);
+  setHidden("checkrow", true);
+  setHidden("result", false);
+  setHidden("nextrow", false);
+  $("workspace").classList.add("revealed");
+  renderStrokes(char);
+  showAnswerOverlay(char, "--muted");
+  renderExplanation(char);
+  renderCardSources(char, true);
+  $("explain").open = true;
+  $("verdict").className = "verdict";
+  $("verdict").textContent = "Repasse dessus si tu veux. Tu l’écriras de tête dans quelques cartes.";
+}
+
+// Fin de la découverte : le kanji revient en test DISCOVER_GAP cartes plus loin.
+function discovered() {
+  const char = session.current;
+  remember(char);
+  session.toDiscover.delete(char);
+  session.discovering = false;
+  session.done++;
+  session.redo = { k: char, gap: DISCOVER_GAP };
+  next();
 }
 
 // Montre la réponse par-dessus le tracé ; l'utilisateur s'auto-évalue ensuite.
 function reveal() {
-  if (!session || session.judged || !$("result").classList.contains("hide")) return;
+  if (!session || session.judged || session.discovering || !$("result").classList.contains("hide")) return;
   const char = session.current;
 
   setHidden("result", false);
@@ -93,7 +132,7 @@ function remember(char) {
     char,
     entryBefore: progress[char] ? [...progress[char]] : null,
     state: {
-      queue: [...session.queue], redo: session.redo, learning: { ...session.learning },
+      queue: [...session.queue], redo: session.redo, learning: { ...session.learning }, toDiscover: new Set(session.toDiscover),
       done: session.done, ok: session.ok, ko: session.ko, known: session.known,
       seen: new Set(session.seen), missed: [...session.missed],
     },
@@ -181,8 +220,9 @@ function markCurrentKnown() {
   // Nouveau kanji pas encore répondu : il ne compte pas pour l'objectif, un autre prend sa place.
   if (session.fresh.has(char) && !introducedToday().includes(char)) {
     const replacement = newKanji().find(k => k !== char && !session.fresh.has(k));
-    if (replacement) { session.queue.push(replacement); session.fresh.add(replacement); }
+    if (replacement) { session.queue.push(replacement); session.fresh.add(replacement); session.toDiscover.add(replacement); }
   }
+  session.toDiscover.delete(char);
   markKnown(char);
   if (session.redo && session.redo.k === char) session.redo = null;
   delete session.learning[char];
@@ -197,6 +237,7 @@ function markCurrentKnown() {
 }
 
 function next() {
+  if (session.discovering) return discovered();
   if (session.redo) {
     session.queue.splice(Math.min(session.redo.gap, session.queue.length), 0, session.redo.k);
     session.redo = null;
@@ -280,13 +321,13 @@ function initSession() {
     }
   });
 
-  // Touche Entrée : Vérifier tant que la réponse est cachée, Suivant une fois qu'elle est jugée.
+  // Touche Entrée : Vérifier tant que la réponse est cachée, Suivant une fois qu'elle est jugée (ou en découverte).
   document.addEventListener("keydown", e => {
     const inSession = session && !$("session").classList.contains("hide");
     const typing = ["BUTTON", "TEXTAREA", "INPUT"].includes(document.activeElement.tagName);
     if (e.key !== "Enter" || !inSession || typing) return;
     e.preventDefault();
-    if (session.judged) next(); else reveal();
+    if (session.judged || session.discovering) next(); else reveal();
   });
 
   // Note perso : sauvegardée à chaque frappe et marquée pour la synchro.

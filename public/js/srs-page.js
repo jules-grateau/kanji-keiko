@@ -8,11 +8,11 @@ const pluralWord = (n, word) => n + " " + word + (n > 1 ? "s" : "");
 const daysLabel = d => d === 0 ? "tout de suite" : d === 365 ? "1 an" : pluralWord(d, "jour");
 
 // Parcours d'un kanji découvert le jour 1 puis toujours réussi : à quel jour, et après combien
-// d'écritures, il atteint chaque boîte. Le jour 1 : un raté (on découvre la réponse) puis les
-// réussites du réapprentissage.
+// d'écritures de tête, il atteint chaque boîte. Le jour 1 : la carte « Découverte » (pas une écriture
+// de tête), puis un test réussi.
 function perfectRun() {
   const rows = [];
-  let day = 1, writes = 1 + RELEARN_SUCCESSES, box = 1;
+  let day = 1, writes = 1, box = 1;
   rows.push({ box, day, writes });
   while (box < MAX_BOX) {
     day += INTERVAL_DAYS[box];
@@ -75,6 +75,9 @@ function renderSrsPage() {
         Ensuite, il repart avec le délai de sa boîte (au moins demain).</li>
       <li>Deux séances séparées : <b>Réviser</b> (les kanji prévus aujourd'hui) et <b>Apprendre</b> (les nouveaux kanji).
         Mieux vaut réviser d'abord, pour ne pas laisser les révisions s'accumuler.</li>
+      <li><b>Apprendre</b> : chaque nouveau kanji est d'abord <b>présenté</b> (carte « Découverte » : tracé animé, sens,
+        lectures, décorticage, modèle à repasser), puis tu l'<b>écris de tête ${DISCOVER_GAP + 1} cartes plus loin</b>.
+        Les tests s'intercalent entre les découvertes. Un kanji n'entre dans les révisions qu'après ce test.</li>
       <li><b>Toutes</b> les révisions prévues sont dans la séance de révision, sans plafond, quel que soit leur niveau.
         Tu peux t'arrêter quand tu veux : le reste t'attend.</li>
     </ul>
@@ -82,13 +85,13 @@ function renderSrsPage() {
 
   <div class="panel">
     <h3>Combien de fois on écrit un kanji</h3>
-    <p class="note">Un kanji découvert le jour 1 puis <b>toujours réussi</b>. Le jour 1, il est écrit ${1 + RELEARN_SUCCESSES} fois :
-      un raté (tu découvres la réponse), puis ${RELEARN_SUCCESSES} réussites.</p>
+    <p class="note">Un kanji découvert le jour 1 puis <b>toujours réussi</b>, en comptant les écritures de tête.
+      Le jour 1 : la carte « Découverte », puis un test réussi (1 écriture).</p>
     <table class="srs-table"><thead><tr><th>Boîte</th><th>Jour ≈</th><th>Écrit au total</th><th></th></tr></thead><tbody>${runRows}</tbody></table>
     <p>En résumé : <b>appris</b> vers ${dayText(learned.day)} en <b>${learned.writes} écritures</b>,
       <b>maîtrisé</b> vers ${dayText(mastered.day)} en <b>${mastered.writes} écritures</b>,
       au plafond vers ${dayText(top.day)} en <b>${top.writes} écritures</b>.</p>
-    <p class="note">Déjà connu (juste du premier coup) : écrit une seule fois le jour 1, donc ${RELEARN_SUCCESSES} écritures de moins.
+    <p class="note">Raté au premier test : ${RELEARN_SUCCESSES} écritures de plus ce jour-là.
       Chaque erreur le fait descendre de ${LAPSE_DROP} boîtes et ajoute au moins ${RELEARN_SUCCESSES} écritures ce jour-là.</p>
   </div>
 
@@ -103,7 +106,7 @@ function renderSrsPage() {
     <h3>Nouveaux kanji et objectif du jour</h3>
     <ul class="srs-list">
       <li>Les nouveaux kanji viennent du N5, puis du N4… jusqu'au N1. Tu peux sauter des niveaux dans les Réglages.</li>
-      <li>L'<b>objectif du jour</b> compte les nouveaux kanji découverts aujourd'hui (dès ta première réponse).
+      <li>L'<b>objectif du jour</b> compte les nouveaux kanji découverts aujourd'hui (une fois écrits de tête après leur découverte).
         Les révisions ne comptent pas dedans. Une fois atteint, « + ${EXTRA_STEP} en plus » permet d'aller plus loin.</li>
       <li><b>Je le maîtrise</b> : le kanji sort des révisions pour toujours (il compte comme maîtrisé).</li>
       <li><b>À réviser</b> (écran « Tous les kanji ») : le kanji repart en boîte 0, dans ta prochaine séance,
@@ -133,5 +136,5 @@ function closeSrsPage() {
 function initSrsPage() {
   $("srsBack").onclick = closeSrsPage;
   document.querySelectorAll("[data-srs-help]").forEach(b => { b.onclick = openSrsPage; });
-  $("verdict").onclick = () => { if ($("verdict").textContent) openSrsPage(); };
+  $("verdict").onclick = () => { if ($("verdict").textContent && !session.discovering) openSrsPage(); };
 }

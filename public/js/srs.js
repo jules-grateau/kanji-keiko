@@ -20,6 +20,7 @@ const LAPSE_DROP = 2;       // un raté fait descendre de 2 boîtes
 const RELEARN_SUCCESSES = 2;   // après un raté : 2 réussites dans la séance avant de repartir
 const REDO_GAP = 4;         // un kanji raté revient après au plus 4 autres cartes
 const RELEARN_GAP = 10;     // … puis, après la 1re réussite, encore une fois ~10 cartes plus loin
+const DISCOVER_GAP = 2;     // nouveau kanji : écrit de tête après 2 autres cartes (≈ 3 cartes après sa découverte)
 const FUZZ_FROM_DAYS = 8;   // à partir de 8 jours, le délai varie au hasard…
 const FUZZ = 0.1;           // … de ±10 %, pour étaler les révisions (pas de pics)
 const DAY_START_HOUR = 4;   // un jour d'étude commence à 4 h du matin

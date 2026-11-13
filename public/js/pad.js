@@ -9,7 +9,8 @@ const BRUSH = 14;   // épaisseur du trait, en pixels du canvas (680×680)
 
 let strokes = [];          // traits de l'utilisateur : chacun est une liste de points [x, y]
 let currentStroke = null;  // trait en cours de tracé
-let overlayChar = null;    // kanji affiché en rouge après Vérifier
+let overlayChar = null;    // kanji affiché sous le tracé (rouge après Vérifier, gris à repasser en découverte)
+let overlayColor = "--red";
 
 // Position du pointeur convertie en coordonnées du canvas (sa taille affichée varie).
 function pointerPos(e) {
@@ -44,7 +45,7 @@ function drawStroke(points) {
 function drawOverlay(char) {
   ctx.save();
   ctx.globalAlpha = .3;
-  ctx.fillStyle = cssVar("--red");
+  ctx.fillStyle = cssVar(overlayColor);
   ctx.font = '500 520px "Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif';
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -76,8 +77,9 @@ function resetPad() {
   clearDrawing();
 }
 
-function showAnswerOverlay(char) {
+function showAnswerOverlay(char, color = "--red") {
   overlayChar = char;
+  overlayColor = color;
   redraw();
 }
 
