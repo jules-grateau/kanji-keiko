@@ -170,6 +170,17 @@ textarea { width: 100%; resize: vertical; }
 .bar i.m { background: var(--ok); opacity: 1; }
 .bar i.l { background: var(--indigo); opacity: .9; }   /* appris */
 
+/* Révisions à venir : une colonne par jour, hauteur proportionnelle au nombre de kanji */
+.upcoming { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; }
+.up-day { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; color: var(--muted); }
+.up-day b { font-size: 14px; color: var(--ink); }
+.up-col { width: 100%; max-width: 30px; height: 64px; display: flex; flex-direction: column; justify-content: flex-end; }
+.up-col i { display: block; width: 100%; flex: none; }
+.up-col i.new { background: var(--indigo); opacity: .9; border-radius: 3px 3px 0 0; }
+.up-col i.old { background: var(--indigo); opacity: .3; }
+.up-day.zero .up-col i.old { height: 2px !important; background: var(--line); opacity: 1; }
+.up-day small { font-size: 11px; color: var(--muted); margin-top: -3px; }
+
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
 .stats b { display: block; font-family: "Shippori Mincho", serif; font-size: 28px; }
 .stats span { font-size: 12px; color: var(--muted); }
@@ -583,15 +594,17 @@ body.catalog .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
   #home {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto auto auto 1fr;
     grid-template-areas:
-      "welcome welcome"
-      "top     progress"
-      "cat     progress";
+      "welcome  welcome"
+      "top      progress"
+      "upcoming progress"
+      "cat      progress";
     column-gap: 16px;
   }
   #home .welcome { grid-area: welcome; }
   #home .home-top { grid-area: top; }
+  #home .home-upcoming { grid-area: upcoming; }
   #home .home-cat { grid-area: cat; display: flex; flex-direction: column; }
   #home .home-cat .row { margin-top: auto; }
   #home .home-progress { grid-area: progress; }

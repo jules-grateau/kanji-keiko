@@ -6,6 +6,35 @@ function renderHome() {
   const stats = levelStats();
   renderProgress(stats);
   renderToday(stats);
+  renderUpcoming();
+}
+
+// Panneau « Révisions à venir » : nombre de kanji prévus chacun des 7 prochains jours (journées de 4 h à 4 h).
+// Les révisions d'aujourd'hui pas encore faites n'y sont pas : elles sont dans « Réviser · N ».
+const UPCOMING_DAYS = 7;
+function renderUpcoming() {
+  const counts = Array(UPCOMING_DAYS).fill(0);
+  // starts[d] = début du jour d (0 = demain) ; le jour d va de starts[d] à starts[d + 1].
+  const starts = Array.from({ length: UPCOMING_DAYS + 1 }, (_, d) => studyDayStart(d + 1));
+  for (const e of Object.values(progress)) {
+    if (e[0] === KNOWN_BOX) continue;
+    for (let d = 0; d < UPCOMING_DAYS; d++) {
+      if (e[1] >= starts[d] && e[1] < starts[d + 1]) { counts[d]++; break; }
+    }
+  }
+  // Cumul : ce qui s'accumule si on ne fait aucune révision à partir de demain. Barre empilée :
+  // en bas (pâle) le reste des jours d'avant, en haut (couleur) ce qui arrive ce jour-là.
+  let total = 0;
+  const totals = counts.map(n => total += n);
+  const max = Math.max(1, total);
+  $("upcoming").innerHTML = counts.map((n, i) => {
+    const day = new Date(starts[i]);
+    const label = i === 0 ? "dem." : day.toLocaleDateString("fr-FR", { weekday: "short" });
+    const before = totals[i] - n;
+    return `<div class="up-day${totals[i] ? "" : " zero"}"><div class="up-col">`
+      + `<i class="new" style="height:${n / max * 100}%"></i><i class="old" style="height:${before / max * 100}%"></i></div>`
+      + `<b>${totals[i]}</b><small>+${n}</small><span>${esc(label)}</span></div>`;
+  }).join("");
 }
 
 // Panneau « Ma progression » : un simple aperçu, rien à cliquer. Trois barres par niveau : vus, appris,
