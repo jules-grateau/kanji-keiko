@@ -69,11 +69,12 @@ function merge(userId, incoming) {
   const state = getState(userId);
   if (incoming.reset) { state.srs = {}; state.intro = {}; }
 
+  const advanced = new Set();   // kanji pour lesquels cet appareil apporte du nouveau (voir « Kanji découverts »)
   for (const k of Object.keys(incoming.srs || {})) {
     const entry = incoming.srs[k];
     if (k.length > MAX_KEY_LENGTH || !isValidEntry(entry)) continue;
     if (!state.srs[k] && Object.keys(state.srs).length >= MAX_ENTRIES) continue;
-    if (isNewer(entry, state.srs[k])) state.srs[k] = entry;
+    if (isNewer(entry, state.srs[k])) { state.srs[k] = entry; advanced.add(k); }
   }
 
   // Une note vide côté appareil supprime la note du serveur.
@@ -92,11 +93,18 @@ function merge(userId, incoming) {
   }
 
   // Kanji découverts par jour : union des listes, seuls les derniers jours sont gardés.
+  // Un kanji n'est accepté que s'il y est déjà, ou si l'appareil apporte vraiment du nouveau pour lui (entrée qui
+  // gagne la fusion : kanji jamais vu, ou remis à réviser à la main). Un appareil en retard — par exemple l'addon
+  // WoW avant d'avoir reçu la progression de l'appli — ne peut donc pas compter comme « découverts » des kanji
+  // déjà connus (ce qui remplissait l'objectif du jour sans rien apprendre).
   if (incoming.intro && typeof incoming.intro === "object") {
     for (const d of Object.keys(incoming.intro)) {
       const list = incoming.intro[d];
       if (!DAY_FORMAT.test(d) || !Array.isArray(list)) continue;
-      const valid = list.filter(k => typeof k === "string" && k.length > 0 && k.length <= MAX_KEY_LENGTH);
+      const already = new Set(state.intro[d] || []);
+      const valid = list.filter(k => typeof k === "string" && k.length > 0 && k.length <= MAX_KEY_LENGTH
+        && (already.has(k) || advanced.has(k)));
+      if (!valid.length && !state.intro[d]) continue;
       state.intro[d] = [...new Set([...(state.intro[d] || []), ...valid])].slice(0, MAX_INTRO_PER_DAY);
     }
     for (const d of Object.keys(state.intro).sort().slice(0, -MAX_INTRO_DAYS)) delete state.intro[d];
