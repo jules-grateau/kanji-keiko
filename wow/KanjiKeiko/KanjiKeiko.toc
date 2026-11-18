@@ -1,0 +1,15 @@
+## Interface: 16001
+## Title: Kanji Keiko |cffe8654d漢字稽古|r
+## Notes: Révisions et apprentissage des kanji (JLPT N5 à N1), même SRS que l'appli Kanji Keiko. /kanji pour ouvrir.
+## Author: Jules Grateau
+## Version: 0.1.0
+## SavedVariables: KanjiKeikoDB
+## X-Category: Utility
+## X-License: code MIT ; tracés KanjiVG CC BY-SA 3.0 ; police Noto Sans JP (OFL 1.1)
+
+Data.lua
+Strokes.lua
+Srs.lua
+Glyph.lua
+Pad.lua
+UI.lua

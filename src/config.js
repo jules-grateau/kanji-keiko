@@ -31,6 +31,7 @@ module.exports = {
   COOKIE_SECURE: process.env.COOKIE_SECURE !== "0",   // cookie HTTPS uniquement (localhost est accepté par les navigateurs)
   PORT: +process.env.PORT || 3000,
   HOST: process.env.HOST || "127.0.0.1",
+  DATA_DIR,
   USERS_DIR: path.join(DATA_DIR, "users"),
   PUBLIC_DIR: path.join(ROOT, "public"),
   MAX_BODY: 2e6,                                       // taille max d'une requête, en octets

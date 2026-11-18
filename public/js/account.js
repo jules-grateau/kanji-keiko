@@ -1,5 +1,5 @@
 // Menu du compte, en haut à droite de l'accueil : nom, e-mail, état de la synchro, et liens
-// (Réglages, Sources et licences, Comment marche la révision, Installer l'appli, Se déconnecter).
+// (Réglages, Sources et licences, Comment marche la révision, Installer l'appli, Jeton pour WoW, Se déconnecter).
 // Le point sur l'avatar montre l'état de la synchro : vert = enregistré sur le serveur, orange = en attente.
 
 function renderAccount(user) {
@@ -41,6 +41,57 @@ async function installApp() {
   $("installHelp").showModal();
 }
 
+// ---------- Jeton pour le compagnon de l'addon WoW ----------
+// Le jeton n'est affiché qu'une fois, à sa création (le serveur n'en garde que l'empreinte).
+
+const frDate = t => new Date(t).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+
+function renderWowStatus(st) {
+  $("wowStatus").textContent = !st.exists ? "Aucun jeton pour l'instant."
+    : "Jeton créé le " + frDate(st.created) + (st.used ? ", utilisé pour la dernière fois le " + frDate(st.used) + "." : ", pas encore utilisé.");
+  $("wowCreate").textContent = st.exists ? "Nouveau jeton" : "Créer un jeton";
+  setHidden("wowRevoke", !st.exists);
+}
+
+async function wowRequest(method) {
+  try {
+    const res = await fetchTimeout("api/token", { method });
+    if (!res.ok) throw new Error(res.status);
+    return await res.json();
+  } catch (e) {
+    $("wowStatus").textContent = "Pas de réseau ou serveur injoignable : réessaie plus tard.";
+    return null;
+  }
+}
+
+async function openWowDialog() {
+  setHidden("wowNew", true);
+  $("wowCopy").textContent = "Copier";
+  $("wowStatus").textContent = "…";
+  $("wowDialog").showModal();
+  const st = await wowRequest("GET");
+  if (st) renderWowStatus(st);
+}
+
+async function createWowToken() {
+  if (!$("wowRevoke").classList.contains("hide")
+    && !confirm("L'ancien jeton ne marchera plus : il faudra coller le nouveau dans le compagnon. Continuer ?")) return;
+  const st = await wowRequest("POST");
+  if (!st) return;
+  renderWowStatus(st);
+  $("wowToken").value = st.token;
+  setHidden("wowNew", false);
+  $("wowToken").select();
+}
+
+async function revokeWowToken() {
+  if (!confirm("Révoquer le jeton ? Le compagnon WoW ne pourra plus synchroniser tant que tu n'en crées pas un nouveau.")) return;
+  const st = await wowRequest("DELETE");
+  if (!st) return;
+  setHidden("wowNew", true);
+  renderWowStatus(st);
+}
+
 function setAccountMenu(open) {
   setHidden("accountMenu", !open);
   $("accountBtn").setAttribute("aria-expanded", open);
@@ -56,6 +107,11 @@ function initAccount() {
   $("menuSources").onclick = openSourcesPage;
   $("installApp").onclick = installApp;
   $("installHelpClose").onclick = () => $("installHelp").close();
+  $("openWow").onclick = openWowDialog;
+  $("wowCreate").onclick = createWowToken;
+  $("wowRevoke").onclick = revokeWowToken;
+  $("wowClose").onclick = () => { $("wowToken").value = ""; $("wowDialog").close(); };
+  $("wowCopy").onclick = () => { $("wowToken").select(); navigator.clipboard && navigator.clipboard.writeText($("wowToken").value); $("wowCopy").textContent = "Copié ✓"; };
   window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installPrompt = e; refreshInstall(); });
   window.addEventListener("appinstalled", () => { installPrompt = null; refreshInstall(); });
   refreshInstall();

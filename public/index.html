@@ -37,6 +37,22 @@
       <p class="note">L'appli apparaît alors sur ton écran d'accueil et s'ouvre en plein écran.</p>
       <button class="primary" id="installHelpClose">Compris</button>
     </dialog>
+    <!-- Jeton pour le compagnon de l'addon WoW (js/account.js, serveur : src/tokens.js) -->
+    <dialog class="panel ask wow-token" id="wowDialog">
+      <p><b>🎮 Jeton pour WoW</b></p>
+      <p class="note">Le compagnon de l'addon WoW s'en sert pour envoyer tes réponses faites en jeu et y recopier ta progression.
+        Garde-le pour toi : il donne accès à ta progression (et à rien d'autre).</p>
+      <p class="wow-status" id="wowStatus"></p>
+      <div class="wow-new hide" id="wowNew">
+        <p class="note">Copie-le maintenant dans le compagnon : il ne sera plus jamais affiché.</p>
+        <div class="row"><input id="wowToken" readonly aria-label="Jeton"><button class="ghost" id="wowCopy">Copier</button></div>
+      </div>
+      <div class="ask-btns">
+        <button class="primary" id="wowCreate">Créer un jeton</button>
+        <button class="ghost danger hide" id="wowRevoke">Révoquer</button>
+        <button class="ghost" id="wowClose">Fermer</button>
+      </div>
+    </dialog>
     <div class="account-menu hide" id="accountMenu" role="menu">
       <div class="account-who">
         <span class="avatar" id="accountAvatar2"></span>
@@ -48,6 +64,7 @@
       <button role="menuitem" id="menuSources">📜 Sources et licences</button>
       <button role="menuitem" data-srs-help>❓ Comment marche la révision</button>
       <button role="menuitem" class="hide" id="installApp">📲 Installer l'appli</button>
+      <button role="menuitem" id="openWow">🎮 Jeton pour WoW</button>
       <hr>
       <button role="menuitem" class="danger" id="logout">Se déconnecter</button>
     </div>

@@ -9,3 +9,6 @@
 # Dépendances et paramètres d'éditeur
 node_modules/
 .claude/settings.local.json
+
+# Compagnon WoW construit (scripts/build-companion.js)
+wow/companion/dist/

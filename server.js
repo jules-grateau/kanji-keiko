@@ -9,11 +9,17 @@
 //   GET  /api/me       → utilisateur connecté (401 sinon)
 //   GET  /api/state    → progression de l'utilisateur connecté
 //   PUT  /api/state    → fusionne la progression envoyée, renvoie le résultat
+//   GET  /api/token    → jeton WoW du compte : existe ? créé quand, utilisé quand
+//   POST /api/token    → crée un jeton WoW (révoque l'ancien) et le renvoie, une seule fois
+//   DELETE /api/token  → révoque le jeton WoW
+//
+// /api/state et /api/me acceptent aussi « Authorization: Bearer <jeton WoW> » (compagnon de l'addon, src/tokens.js).
 const http = require("http");
 const { PORT, HOST, GOOGLE_CLIENT_ID } = require("./src/config");
 const { verifyIdToken } = require("./src/google");
 const session = require("./src/session");
 const store = require("./src/store");
+const tokens = require("./src/tokens");
 const { send, readJson, serveStatic } = require("./src/http");
 
 // Routes qui ne demandent pas d'être connecté. Renvoie true si la requête a été prise en charge.
@@ -57,15 +63,26 @@ function handlePrivateApi(req, res, url, user) {
     }
     return send(res, 405, { error: "méthode non permise" });
   }
+  // Jeton WoW : seulement avec une vraie session Google (un jeton ne peut pas en créer d'autres).
+  if (url === "/api/token") {
+    if (user.viaToken) return send(res, 403, { error: "réservé à l'appli" });
+    if (req.method === "GET") return send(res, 200, tokens.status(user));
+    if (req.method === "POST") return send(res, 200, { token: tokens.create(user), ...tokens.status(user) });
+    if (req.method === "DELETE") { tokens.revoke(user); return send(res, 200, tokens.status(user)); }
+    return send(res, 405, { error: "méthode non permise" });
+  }
   send(res, 404, { error: "introuvable" });
 }
+
+// Routes ouvertes au jeton WoW.
+const TOKEN_ROUTES = new Set(["/api/state", "/api/me"]);
 
 http.createServer((req, res) => {
   const url = req.url.split("?")[0];
 
   if (url.startsWith("/api/")) {
     if (handlePublicApi(req, res, url)) return;
-    const user = session.currentUser(req);
+    const user = session.currentUser(req) || (TOKEN_ROUTES.has(url) && tokens.userFromRequest(req));
     if (!user) return send(res, 401, { error: "non connecté" });
     return handlePrivateApi(req, res, url, user);
   }

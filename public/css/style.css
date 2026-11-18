@@ -804,3 +804,11 @@ dialog.install-help { text-align: left; }
 .install-help ol { margin: 0 0 12px; padding-left: 20px; }
 .install-help li { margin-bottom: 8px; }
 .install-help .primary { display: block; margin: 14px auto 0; }
+
+/* Jeton pour le compagnon de l'addon WoW */
+dialog.wow-token { text-align: left; max-width: min(440px, calc(100% - 32px)); }
+.wow-token .ask-btns { justify-content: flex-start; margin: 14px 0 0; }
+.wow-status { font-size: 14px; }
+.wow-new .row { display: flex; gap: 8px; }
+.wow-new input { flex: 1; min-width: 0; font: 13px ui-monospace, monospace; padding: 8px; border: 1px solid var(--line);
+  border-radius: 8px; background: var(--paper); color: var(--ink); }
