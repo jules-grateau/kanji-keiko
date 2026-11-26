@@ -36,6 +36,37 @@ Pas besoin de « secret client » : le serveur vérifie seulement la signature d
 | `COOKIE_SECURE=0` | à mettre seulement si tu sers la page en HTTP sur autre chose que localhost |
 | `HOST`, `PORT` | défaut `127.0.0.1:3000` |
 
+## Déploiement
+
+Automatique à chaque push sur `main` qui touche le serveur (`server.js`, `src/`, `public/`, `Dockerfile`…) ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)) :
+l'image est construite et envoyée sur Docker Hub (`julesgrateau/kanji-keiko:latest` + un tag par commit),
+puis le VPS est mis à jour par SSH avec [deploy/update-vps.sh](deploy/update-vps.sh)
+(`docker compose pull` puis `up -d` du seul service `kanji-keiko`, le compose du VPS contenant d'autres applications, et attente du healthcheck). Le résultat ✓/❌ s'affiche à côté du commit sur GitHub ;
+l'onglet *Actions* permet aussi de relancer un déploiement (*Run workflow*).
+
+Sur le VPS, le `docker-compose.yml` doit utiliser l'image publiée (`image: julesgrateau/kanji-keiko:latest`, sans `build:`).
+
+### Réglages (une fois)
+
+GitHub → *Settings → Secrets and variables → Actions → New repository secret* :
+
+| Secret | Contenu |
+|---|---|
+| `DOCKERHUB_USERNAME` | `julesgrateau` |
+| `DOCKERHUB_TOKEN` | jeton Docker Hub (*Account settings → Personal access tokens*, droits *Read & Write*) |
+| `VPS_HOST` | IP ou domaine du VPS |
+| `VPS_USER` | utilisateur SSH |
+| `VPS_PORT` | port SSH (facultatif, 22 par défaut) |
+| `VPS_DIR` | dossier du `docker-compose.yml` sur le VPS |
+| `VPS_SSH_KEY` | clé privée SSH dédiée au déploiement (`ssh-keygen -t ed25519 -N "" -f kanji_deploy_key`) |
+| `VPS_KNOWN_HOSTS` | sortie de `ssh-keyscan -p <port> <hôte>` (empêche de se connecter à un faux serveur) |
+
+Sur le VPS, ajoute la clé publique à `~/.ssh/authorized_keys` de `VPS_USER`, précédée de `restrict `
+(pas de tunnel ni de terminal). Cet utilisateur doit pouvoir lancer `docker` sans mot de passe :
+le plus simple est `sudo usermod -aG docker <utilisateur>` (puis se reconnecter).
+
+Revenir à une version précédente : sur le VPS, mettre `image: julesgrateau/kanji-keiko:<id du commit>` puis `docker compose up -d`.
+
 ## Structure
 
 ```
