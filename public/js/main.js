@@ -7,6 +7,7 @@ initSources();
 initAccount();
 initPad();
 initSession();
+initTablet();
 renderHome();
 initSync();
 

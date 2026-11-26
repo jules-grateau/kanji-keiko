@@ -8,6 +8,7 @@ function showScreen(id) {
   document.body.classList.toggle("focus", ["session", "catalog", "settings", "srsInfo", "sources"].includes(id));   // on masque le titre pour gagner de la place
   document.body.classList.toggle("on-home", id === "home");    // bouton ⚙ Réglages dans l'en-tête
   document.body.classList.toggle("catalog", id === "catalog");   // écran à hauteur fixe (voir style.css)
+  if (id !== "session") leaveTablet(true);   // fin de séance : on quitte le plein écran (tablet.js), sans oublier le choix
 }
 
 // Deux sortes de séances, séparées : « review » (révisions dues) et « learn » (nouveaux kanji).
@@ -36,6 +37,7 @@ function startSession(mode, extraNew = 0) {
     history: [],             // réponses données, pour « ← Précédent » (voir goBack)
   };
   showScreen("session");
+  restoreTablet();   // plein écran si c'était le choix la dernière fois (tablet.js)
   nextCard();
 }
 
@@ -329,6 +331,20 @@ function initSession() {
     e.preventDefault();
     if (session.judged || session.discovering) next(); else reveal();
   });
+
+  // 1 / 2 : Raté / J'avais juste ; Suppr ou Retour arrière : tout effacer.
+  // Pratique avec une tablette graphique : on les met sur les touches de la tablette.
+  document.addEventListener("keydown", e => {
+    const inSession = session && !$("session").classList.contains("hide");
+    const typing = ["TEXTAREA", "INPUT"].includes(document.activeElement.tagName);
+    if (!inSession || typing || e.ctrlKey || e.metaKey || e.altKey) return;
+    const grading = !$("grade").classList.contains("hide");
+    if (grading && (e.key === "1" || e.key === "2")) { e.preventDefault(); $(e.key === "1" ? "gn" : "gy").click(); }
+    else if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); clearDrawing(); }
+  });
+
+  // Les boutons du tracé ne gardent pas le focus : sinon Entrée les déclencherait au lieu de Vérifier.
+  ["undo", "clear"].forEach(id => $(id).addEventListener("click", e => e.currentTarget.blur()));
 
   // Note perso : sauvegardée à chaque frappe et marquée pour la synchro.
   $("note").addEventListener("input", e => {

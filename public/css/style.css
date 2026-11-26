@@ -320,6 +320,120 @@ body.focus header { display: none; }
 .verdict.ok { color: var(--ok); }
 .verdict.ko { color: var(--red); }
 
+/* Touche à presser, sur les boutons : seulement avec clavier et souris ou stylet (pas sur téléphone) */
+kbd {
+  display: none;
+  margin-left: 6px;
+  padding: 2px 5px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font: 700 11px/1 system-ui, sans-serif;
+  opacity: .55;
+  vertical-align: 1px;
+}
+@media (hover: hover) and (pointer: fine) { kbd { display: inline-block; } }
+
+.top-right { display: flex; gap: 16px; align-items: center; }
+
+/* Cercle de la taille du pinceau qui suit le stylet (mode tablette, voir pad.js) */
+.brush-cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 1.5px solid var(--red);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+}
+body:not(.tablet) .brush-cursor { display: none; }
+.brush-cursor.on { opacity: .85; }
+
+/* ============================================================
+   Mode tablette graphique (js/tablet.js) : plein écran, trois colonnes.
+   Consigne + réponse | grand carré de dessin (toute la hauteur) | zone d'action géante.
+   Avec une tablette sans écran, on ne vise pas : toute la colonne de droite est le bouton
+   (Vérifier, puis Raté en haut / Juste en bas, puis Suivant). Il suffit d'aller au bord droit.
+   Le carré fait la hauteur de l'écran moins la barre du haut (≈ 66px),
+   sans manger les deux colonnes (au moins 250px chacune).
+   ============================================================ */
+body.tablet { overflow: hidden; }
+body.tablet #session {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 20px 14px;
+  background: var(--paper);
+}
+body.tablet .top { font-size: 14px; }
+body.tablet .prog { margin-bottom: 12px; }
+body.tablet kbd { display: none; }   /* pas de clavier sous la main */
+body.tablet #card {
+  --pad: min(calc(100dvh - 66px), calc(100vw - 600px));
+  height: var(--pad);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  display: grid;
+  grid-template-columns: minmax(250px, 1fr) var(--pad) minmax(250px, 1fr);
+  grid-template-rows: auto auto auto 1fr auto;
+  column-gap: 24px;
+  align-items: start;
+}
+body.tablet #card .card-play,
+body.tablet #card .workspace { display: contents; }
+
+/* Colonne de gauche : consigne, puis (après Vérifier) l'ordre des traits et le kanji, puis le verdict */
+body.tablet #card > .meta { grid-area: 1 / 1; }
+body.tablet #card > .mean { grid-area: 2 / 1; font-size: 30px; }
+body.tablet #card > .readings { grid-area: 3 / 1; }
+body.tablet #card .answer-col {
+  grid-area: 4 / 1;
+  align-self: stretch;
+  min-height: 0;
+  margin-top: 10px;
+  container-type: size;   /* les carrés se règlent sur la place restante */
+}
+body.tablet #card .answer-col .square { flex: none; width: min(100cqw, calc((100cqh - 8px) / 2)); aspect-ratio: 1; }
+body.tablet #card .verdict { grid-area: 5 / 1; text-align: left; min-height: 3.1em; margin: 8px 0 0; }
+
+/* Carré de dessin ; ↶ et ✕ dans son coin, en grand */
+body.tablet #card .pad { grid-area: 1 / 2 / 6 / 3; width: var(--pad); height: var(--pad); overflow: hidden; }
+body.tablet #card .pad canvas { cursor: none; }
+body.tablet #card .pad-tools { top: 12px; right: 12px; gap: 12px; }
+body.tablet #card .pad-tools button { width: 64px; height: 64px; font-size: 28px; }
+
+/* Colonne de droite : un seul bouton sur toute la hauteur, ou deux moitiés (Raté / Juste).
+   La zone survolée par le stylet s'éclaire : on voit où on va taper sans regarder sa main. */
+body.tablet #card .actions {
+  grid-area: 1 / 3 / 6 / 4;
+  align-self: stretch;
+  flex-direction: column;
+  gap: 12px;
+}
+body.tablet #card .actions button {
+  flex: 1;
+  max-width: none;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 30px;
+  font-weight: 700;
+  transition: background .12s, border-color .12s;
+}
+body.tablet #card .actions button:hover { border-color: var(--ink); background: color-mix(in srgb, var(--ink) 10%, var(--card)); }
+body.tablet #card .grade .n { border-color: var(--red); color: var(--red); }
+body.tablet #card .grade .n:hover { background: color-mix(in srgb, var(--red) 18%, var(--card)); }
+body.tablet #card .grade .y { border-color: var(--ok); color: var(--ok); }
+body.tablet #card .grade .y:hover { background: color-mix(in srgb, var(--ok) 18%, var(--card)); }
+
+/* Ici on vient écrire : « Trait par trait », « Décortiquer » et les sources reviennent en sortant (Échap). */
+body.tablet #result,
+body.tablet .card-sources { display: none; }
+
 /* ============================================================
    Trait par trait
    ============================================================ */
